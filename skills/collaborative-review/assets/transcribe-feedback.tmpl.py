@@ -58,7 +58,7 @@ GROQ_MODEL        = "whisper-large-v3"
 GROQ_ENV_FALLBACK = r"<your-env-file>"
 
 
-def checar_template_instanciado():
+def check_template_was_filled_in():
     """Stop with a clear message if the template was copied without filling it in."""
     if "{{" in EDGE_FN_URL or "{{" in OUT_MD_DEFAULT:
         sys.exit(
@@ -81,8 +81,8 @@ def parse_args():
     p.add_argument("--reviewer", default=None,
                    help="filter by reviewer name (case-insensitive)")
     p.add_argument("--include-legacy", action="store_true", dest="include_legacy",
-                   help="inclui linhas legadas (sem projeto/material) mesmo com "
-                        "filtro de projeto/material ativo")
+                   help="include legacy rows (no project/material) even when "
+                        "filtro de project_name/material ativo")
     p.add_argument("--json", default=None, dest="json_path", metavar="CAMINHO",
                    help="also write the structured list as JSON to this path")
     p.add_argument("--md", default=OUT_MD_DEFAULT, dest="md_path", metavar="CAMINHO",
@@ -115,11 +115,11 @@ def get_groq_key():
     sys.exit(f"Error: API key not found in the environment or in {GROQ_ENV_FALLBACK}")
 
 
-def ler_feedbacks(senha):
+def ler_feedbacks(dashboard_password):
     """POSTs the password to the read function and returns the feedback list."""
     req = urllib.request.Request(
         EDGE_FN_URL,
-        data=json.dumps({"password": senha}).encode(),
+        data=json.dumps({"password": dashboard_password}).encode(),
         headers={"Content-Type": "application/json"}, method="POST")
     try:
         with urllib.request.urlopen(req, timeout=60) as r:
@@ -132,7 +132,7 @@ def ler_feedbacks(senha):
         sys.exit(f"Network error calling the read function: {e.reason}")
 
 
-def eh_legado(fb):
+def is_legacy(fb):
     """A legacy row predates the scope migration (no project and no material)."""
     return not (fb.get("project") or fb.get("material"))
 
@@ -156,7 +156,7 @@ def passa_filtro(fb, args):
         return False
 
     tem_filtro_escopo = bool(args.project or args.material)
-    if eh_legado(fb):
+    if is_legacy(fb):
         return (not tem_filtro_escopo) or args.include_legacy
 
     if args.project and not _igual(fb.get("project"), args.project):
@@ -166,7 +166,7 @@ def passa_filtro(fb, args):
     return True
 
 
-def transcrever(url, groq_key):
+def transcribe(url, groq_key):
     """
     Downloads the audio from its signed URL to a UNIQUE temporary file and
     com Groq Whisper (whisper-large-v3, language=pt) via curl.
@@ -211,7 +211,7 @@ def montar_markdown(fbs, n_audio, args):
     """Markdown grouped by section."""
     filtros = []
     if args.project:
-        filtros.append(f"projeto = {args.project}")
+        filtros.append(f"project_name = {args.project}")
     if args.material:
         filtros.append(f"material = {args.material}")
     if args.reviewer:
@@ -220,10 +220,10 @@ def montar_markdown(fbs, n_audio, args):
         filtros.append("legacy included")
     rotulo_filtro = f" (filtro: {'; '.join(filtros)})" if filtros else ""
 
-    linhas = ["# Feedbacks transcritos", "",
+    lines = ["# Feedbacks transcritos", "",
               f"Total: {len(fbs)} feedback item(s), {n_audio} with audio (transcribed below)."
               f"{rotulo_filtro}",
-              "Gerado por `transcrever-feedbacks.py` (skill collaborative-review).",
+              "Generated por `transcribe-feedbacks.py` (skill collaborative-review).",
               "", "---", ""]
 
     by_section = defaultdict(list)
@@ -231,54 +231,54 @@ def montar_markdown(fbs, n_audio, args):
         by_section[f.get("section") or "(no section)"].append(f)
 
     for section in sorted(by_section):
-        linhas.append(f"## {section}")
-        linhas.append("")
+        lines.append(f"## {section}")
+        lines.append("")
         for f in by_section[section]:
-            nome = f.get("reviewer_name", "?")
+            name = f.get("reviewer_name", "?")
             data = str(f.get("created_at", ""))[:16].replace("T", " ")
             escopo = ""
             if f.get("project") or f.get("material"):
                 escopo = f" · {f.get('project') or '?'} / {f.get('material') or '?'}"
             marcador = " - REVIEW CONCLUSION" if f.get("type") == "conclusion" else ""
-            linhas.append(f"**{nome}** · {data}{escopo}{marcador}")
+            lines.append(f"**{name}** · {data}{escopo}{marcador}")
             if f.get("comment"):
-                linhas.append(f"> {f['comment']}")
-            if f.get("_transcricao"):
-                linhas.append(f"> 🎙 (audio) {f['_transcricao']}")
-            linhas.append("")
-        linhas.append("")
-    return "\n".join(linhas)
+                lines.append(f"> {f['comment']}")
+            if f.get("_transcript"):
+                lines.append(f"> 🎙 (audio) {f['_transcript']}")
+            lines.append("")
+        lines.append("")
+    return "\n".join(lines)
 
 
 def montar_json(fbs):
     """
     Structured list for the correction engine.
-    Formato: [{id, revisor, secao, comentario, transcript, tipo, created_at}]
+    Formato: [{id, reviewer, section_value, comment_text, transcript, kind, created_at}]
     """
     return [{
         "id":          f.get("id"),
-        "revisor":     f.get("reviewer_name"),
+        "reviewer":     f.get("reviewer_name"),
         "section":       f.get("section"),
         "comment":  f.get("comment"),
-        "transcript": f.get("_transcricao"),  # None when there is no audio
+        "transcript": f.get("_transcript"),  # None when there is no audio
         "type":        f.get("type") or "comment",
         "created_at":  f.get("created_at"),
     } for f in fbs]
 
 
 def main():
-    checar_template_instanciado()
+    check_template_was_filled_in()
     args = parse_args()
-    senha = get_senha(args)
+    dashboard_password = get_senha(args)
     groq_key = get_groq_key()
 
     print("Lendo feedbacks do painel...")
-    todos = ler_feedbacks(senha)
-    fbs = [f for f in todos if passa_filtro(f, args)]
-    descartados = len(todos) - len(fbs)
-    print(f"  {len(todos)} feedback(s) no total; {len(fbs)} apos filtro"
-          f" ({descartados} fora do filtro)." if descartados
-          else f"  {len(fbs)} feedback(s) encontrados.")
+    all = ler_feedbacks(dashboard_password)
+    fbs = [f for f in all if passa_filtro(f, args)]
+    discarded = len(all) - len(fbs)
+    print(f"  {len(all)} feedback(s) no total; {len(fbs)} apos filtro"
+          f" ({discarded} fora do filtro)." if discarded
+          else f"  {len(fbs)} feedback(s) found.")
 
     fbs.sort(key=lambda f: f.get("created_at") or "")
     n_audio = 0
@@ -286,7 +286,7 @@ def main():
         if f.get("audio_url"):
             n_audio += 1
             print(f"  transcribing audio from {f.get('reviewer_name')} ({n_audio})...")
-            f["_transcricao"] = transcrever(f["audio_url"], groq_key)
+            f["_transcript"] = transcribe(f["audio_url"], groq_key)
 
     with open(args.md_path, "w", encoding="utf-8") as fp:
         fp.write(montar_markdown(fbs, n_audio, args))

@@ -61,6 +61,9 @@ jobs:
       - name: The pieces agree on the wire format
         run: node tools/check-wire-format.mjs .
 
+      - name: Server function payload types match what the code reads
+        run: node tools/check-edge-types.mjs .
+
       # Runs without a private-term list, so only the credential patterns are
       # active here. That is the point: this job proves no CREDENTIAL reaches the
       # repository. Names are the maintainer's list and stay on their machine.

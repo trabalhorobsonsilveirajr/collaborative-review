@@ -9,7 +9,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "npm run test:parse && npm run test:gate && npm run test:manifest && npm run test:i18n && npm run test:i18n-keys && npm run test:language && npm run test:placeholders && npm run test:contracts && npm run test:wire && npm run test:leaks && npm run test:teeth && npm run test:sync",
+    "test": "npm run test:parse && npm run test:gate && npm run test:manifest && npm run test:i18n && npm run test:i18n-keys && npm run test:language && npm run test:placeholders && npm run test:contracts && npm run test:wire && npm run test:edge-types && npm run test:leaks && npm run test:teeth && npm run test:sync",
     "test:parse": "node tools/check-artifacts.mjs .",
     "test:gate": "node skills/collaborative-review/scripts/gate.mjs selftest",
     "test:manifest": "node skills/collaborative-review/scripts/section-manifest.mjs selftest",
@@ -22,7 +22,8 @@
     "demo": "node skills/collaborative-review/scripts/demo.mjs",
     "test:i18n": "node skills/collaborative-review/scripts/i18n.mjs selftest",
     "test:i18n-keys": "node tools/check-i18n.mjs .",
-    "test:language": "node tools/prove-language-picker.mjs ."
+    "test:language": "node tools/prove-language-picker.mjs .",
+    "test:edge-types": "node tools/check-edge-types.mjs ."
   },
   "keywords": [
     "claude-code",

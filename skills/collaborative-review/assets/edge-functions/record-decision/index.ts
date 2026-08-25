@@ -25,8 +25,8 @@ const cors = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-function resposta(status: number, corpo: unknown): Response {
-  return new Response(JSON.stringify(corpo), {
+function resposta(status: number, responseBody: unknown): Response {
+  return new Response(JSON.stringify(responseBody), {
     status,
     headers: { ...cors, "Content-Type": "application/json" },
   });
@@ -65,46 +65,46 @@ Deno.serve(async (req: Request) => {
       password?: string;
       project?: string;
       material?: string;
-      secao?: string;
-      comentario?: string;
+      section?: string;
+      comment?: string;
     };
     if (password !== expectedPassword) {
       return resposta(401, { error_message: "Incorrect password" });
     }
 
     // Validation, matching the size limits enforced by the table policy
-    const erros: string[] = [];
-    const projetoLimpo = typeof project === "string" ? project.trim() : "";
-    const materialLimpo = typeof material === "string" ? material.trim() : "";
-    const comentarioLimpo = typeof comment === "string" ? comment.trim() : "";
-    const secaoLimpa = typeof section === "string" && section.trim().length > 0
+    const errors: string[] = [];
+    const cleanProject = typeof project === "string" ? project.trim() : "";
+    const cleanMaterial = typeof material === "string" ? material.trim() : "";
+    const cleanComment = typeof comment === "string" ? comment.trim() : "";
+    const cleanSection = typeof section === "string" && section.trim().length > 0
       ? section.trim()
       : "Pending decision";
 
-    if (projetoLimpo.length < 1 || projetoLimpo.length > 80) {
-      erros.push("project: required, 1 to 80 characters");
+    if (cleanProject.length < 1 || cleanProject.length > 80) {
+      errors.push("project: required, 1 to 80 characters");
     }
-    if (materialLimpo.length < 1 || materialLimpo.length > 80) {
-      erros.push("material: required, 1 to 80 characters");
+    if (cleanMaterial.length < 1 || cleanMaterial.length > 80) {
+      errors.push("material: required, 1 to 80 characters");
     }
-    if (comentarioLimpo.length < 1 || comentarioLimpo.length > 5000) {
-      erros.push("comment: required, 1 to 5000 characters");
+    if (cleanComment.length < 1 || cleanComment.length > 5000) {
+      errors.push("comment: required, 1 to 5000 characters");
     }
-    if (secaoLimpa.length > 500) {
-      erros.push("section: ate 500 caracteres");
+    if (cleanSection.length > 500) {
+      errors.push("section: ate 500 caracteres");
     }
-    if (erros.length > 0) {
-      return resposta(400, { error_message: "Validation failed: " + erros.join("; ") });
+    if (errors.length > 0) {
+      return resposta(400, { error_message: "Validation failed: " + errors.join("; ") });
     }
 
     const { data, error } = await supabase
       .from("feedbacks")
       .insert({
         reviewer_name: "MOTOR",
-        section: secaoLimpa,
-        comment: comentarioLimpo,
-        project: projetoLimpo,
-        material: materialLimpo,
+        section: cleanSection,
+        comment: cleanComment,
+        project: cleanProject,
+        material: cleanMaterial,
         type: "decision",
       })
       .select("id")

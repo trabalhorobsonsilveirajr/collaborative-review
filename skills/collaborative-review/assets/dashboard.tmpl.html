@@ -67,136 +67,136 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
   :root{
-    --vermelho-50:oklch(0.97 0.02 25); --vermelho-100:oklch(0.94 0.04 25); --vermelho-200:oklch(0.88 0.08 25);
+    --red-50:oklch(0.97 0.02 25); --red-100:oklch(0.94 0.04 25); --red-200:oklch(0.88 0.08 25);
     /* Danger color darkened so white text on it clears the WCAG AA contrast ratio*/
-    --vermelho-500:oklch(0.58 0.20 25); --vermelho-600:oklch(0.52 0.22 25); --vermelho-700:oklch(0.45 0.20 25);
-    --cinza-50:oklch(0.99 0 0); --cinza-100:oklch(0.97 0 0); --cinza-200:oklch(0.91 0 0); --cinza-300:oklch(0.82 0 0);
-    --cinza-400:oklch(0.65 0 0); --cinza-500:oklch(0.55 0 0); --cinza-600:oklch(0.45 0 0); --cinza-700:oklch(0.35 0 0);
-    --cinza-800:oklch(0.25 0 0); --cinza-900:oklch(0.15 0 0);
+    --red-500:oklch(0.58 0.20 25); --red-600:oklch(0.52 0.22 25); --red-700:oklch(0.45 0.20 25);
+    --gray-50:oklch(0.99 0 0); --gray-100:oklch(0.97 0 0); --gray-200:oklch(0.91 0 0); --gray-300:oklch(0.82 0 0);
+    --gray-400:oklch(0.65 0 0); --gray-500:oklch(0.55 0 0); --gray-600:oklch(0.45 0 0); --gray-700:oklch(0.35 0 0);
+    --gray-800:oklch(0.25 0 0); --gray-900:oklch(0.15 0 0);
     /* Success color darkened so white text on it clears the WCAG AA contrast ratio*/
-    --sucesso:oklch(0.53 0.19 145); --sucesso-bg:oklch(0.96 0.05 145); --sucesso-borda:oklch(0.85 0.10 145);
-    --alerta:oklch(0.75 0.15 85); --alerta-bg:oklch(0.97 0.04 85); --alerta-borda:oklch(0.87 0.09 85); --alerta-txt:oklch(0.45 0.12 75);
-    --erro:oklch(0.55 0.22 27);
+    --success:oklch(0.53 0.19 145); --success-bg:oklch(0.96 0.05 145); --success-border:oklch(0.85 0.10 145);
+    --warning:oklch(0.75 0.15 85); --warning-bg:oklch(0.97 0.04 85); --warning-border:oklch(0.87 0.09 85); --warning-text:oklch(0.45 0.12 75);
+    --error:oklch(0.55 0.22 27);
     --radius-md:8px; --radius-lg:12px; --radius-xl:16px;
     --font-heading:"Plus Jakarta Sans",ui-sans-serif,system-ui,sans-serif; --font-sans:"DM Sans",ui-sans-serif,system-ui,sans-serif;
   }
   *,*::before,*::after{box-sizing:border-box;}
-  body{margin:0;font-family:var(--font-sans);color:var(--cinza-900);background:var(--cinza-100);line-height:1.55;font-size:16px;}
+  body{margin:0;font-family:var(--font-sans);color:var(--gray-900);background:var(--gray-100);line-height:1.55;font-size:16px;}
   h1,h2,h3{font-family:var(--font-heading);font-weight:700;letter-spacing:-0.01em;margin:0;}
   .container{width:100%;max-width:920px;margin:0 auto;padding:0 1.25rem;}
-  .topbar{background:#fff;border-bottom:1px solid var(--cinza-200);position:sticky;top:0;z-index:10;}
+  .topbar{background:#fff;border-bottom:1px solid var(--gray-200);position:sticky;top:0;z-index:10;}
   .topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0.9rem 0;flex-wrap:wrap;}
-  .wordmark{font-family:var(--font-heading);font-weight:800;font-size:1.05rem;color:var(--vermelho-600);}
-  .wordmark span{color:var(--cinza-900);}
-  .badge{display:inline-flex;align-items:center;gap:0.4rem;background:var(--vermelho-50);color:var(--vermelho-700);font-size:0.78rem;font-weight:700;padding:0.35rem 0.8rem;border-radius:9999px;}
-  .btn{font-family:var(--font-heading);font-weight:600;font-size:0.9rem;color:#fff;background:var(--vermelho-500);border:none;border-radius:var(--radius-md);padding:0.6rem 1.2rem;cursor:pointer;transition:background .15s;}
-  .btn:hover{background:var(--vermelho-600);} .btn:disabled{opacity:0.6;cursor:default;}
-  .btn.ghost{background:#fff;color:var(--vermelho-600);border:1px solid var(--vermelho-200);}
-  .btn.ghost:hover{background:var(--vermelho-50);}
+  .wordmark{font-family:var(--font-heading);font-weight:800;font-size:1.05rem;color:var(--red-600);}
+  .wordmark span{color:var(--gray-900);}
+  .badge{display:inline-flex;align-items:center;gap:0.4rem;background:var(--red-50);color:var(--red-700);font-size:0.78rem;font-weight:700;padding:0.35rem 0.8rem;border-radius:9999px;}
+  .btn{font-family:var(--font-heading);font-weight:600;font-size:0.9rem;color:#fff;background:var(--red-500);border:none;border-radius:var(--radius-md);padding:0.6rem 1.2rem;cursor:pointer;transition:background .15s;}
+  .btn:hover{background:var(--red-600);} .btn:disabled{opacity:0.6;cursor:default;}
+  .btn.ghost{background:#fff;color:var(--red-600);border:1px solid var(--red-200);}
+  .btn.ghost:hover{background:var(--red-50);}
   /* login */
-  .gate{max-width:400px;margin:5rem auto;background:#fff;border:1px solid var(--cinza-200);border-radius:var(--radius-xl);padding:2rem;box-shadow:0 10px 40px -20px rgba(0,0,0,0.2);}
+  .gate{max-width:400px;margin:5rem auto;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-xl);padding:2rem;box-shadow:0 10px 40px -20px rgba(0,0,0,0.2);}
   .gate h2{font-size:1.3rem;margin-bottom:0.4rem;}
-  .gate p{color:var(--cinza-600);font-size:0.9rem;margin:0 0 1.25rem;}
-  .gate input{width:100%;font-family:var(--font-sans);font-size:1rem;padding:0.7rem 0.9rem;border:1px solid var(--cinza-300);border-radius:var(--radius-md);margin-bottom:1rem;}
-  .gate input:focus{outline:none;border-color:var(--vermelho-500);box-shadow:0 0 0 3px oklch(0.62 0.20 25 / 18%);}
+  .gate p{color:var(--gray-600);font-size:0.9rem;margin:0 0 1.25rem;}
+  .gate input{width:100%;font-family:var(--font-sans);font-size:1rem;padding:0.7rem 0.9rem;border:1px solid var(--gray-300);border-radius:var(--radius-md);margin-bottom:1rem;}
+  .gate input:focus{outline:none;border-color:var(--red-500);box-shadow:0 0 0 3px oklch(0.62 0.20 25 / 18%);}
   .gate .btn{width:100%;}
-  .gate .err{color:var(--erro);font-size:0.85rem;font-weight:600;margin-top:0.75rem;min-height:1.2rem;}
-  /* cabecalho + barra de acoes */
+  .gate .err{color:var(--error);font-size:0.85rem;font-weight:600;margin-top:0.75rem;min-height:1.2rem;}
+  /* cabecalho + barra de actions */
   .head{padding:1.75rem 0 0.5rem;}
   .head h1{font-size:1.6rem;margin-bottom:0.3rem;}
-  .head p{color:var(--cinza-600);font-size:0.92rem;}
+  .head p{color:var(--gray-600);font-size:0.92rem;}
   .toolbar{display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin:1.25rem 0 0.75rem;}
-  .count{font-size:0.9rem;color:var(--cinza-700);font-weight:600;}
-  /* filtros de projeto e material */
-  .filtros{display:flex;align-items:flex-end;gap:0.9rem;flex-wrap:wrap;margin:0 0 1.1rem;background:#fff;border:1px solid var(--cinza-200);border-radius:var(--radius-lg);padding:0.85rem 1rem;}
-  .filtro{display:flex;flex-direction:column;gap:0.25rem;font-size:0.72rem;font-weight:700;color:var(--cinza-600);text-transform:uppercase;letter-spacing:0.04em;}
-  .filtro select{font-family:var(--font-sans);font-size:0.92rem;color:var(--cinza-900);padding:0.5rem 0.7rem;border:1px solid var(--cinza-300);border-radius:var(--radius-md);background:#fff;min-width:180px;max-width:280px;cursor:pointer;}
-  .filtro select:focus{outline:none;border-color:var(--vermelho-500);box-shadow:0 0 0 3px oklch(0.62 0.20 25 / 18%);}
-  .filtro-limpar{font-size:0.82rem;color:var(--vermelho-600);font-weight:600;background:none;border:none;cursor:pointer;padding:0.5rem 0.2rem;text-decoration:underline;}
+  .count{font-size:0.9rem;color:var(--gray-700);font-weight:600;}
+  /* filtros de project e material */
+  .filtros{display:flex;align-items:flex-end;gap:0.9rem;flex-wrap:wrap;margin:0 0 1.1rem;background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:0.85rem 1rem;}
+  .filtro{display:flex;flex-direction:column;gap:0.25rem;font-size:0.72rem;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:0.04em;}
+  .filtro select{font-family:var(--font-sans);font-size:0.92rem;color:var(--gray-900);padding:0.5rem 0.7rem;border:1px solid var(--gray-300);border-radius:var(--radius-md);background:#fff;min-width:180px;max-width:280px;cursor:pointer;}
+  .filtro select:focus{outline:none;border-color:var(--red-500);box-shadow:0 0 0 3px oklch(0.62 0.20 25 / 18%);}
+  .filtro-limpar{font-size:0.82rem;color:var(--red-600);font-weight:600;background:none;border:none;cursor:pointer;padding:0.5rem 0.2rem;text-decoration:underline;}
   /* abas */
-  .tabs{display:flex;gap:0.4rem;border-bottom:2px solid var(--cinza-200);margin-bottom:1.1rem;}
-  .tab{font-family:var(--font-heading);font-weight:700;font-size:0.92rem;color:var(--cinza-500);background:none;border:none;border-bottom:3px solid transparent;padding:0.55rem 0.9rem;margin-bottom:-2px;cursor:pointer;}
-  .tab:hover{color:var(--cinza-700);}
-  .tab[aria-selected="true"]{color:var(--vermelho-600);border-bottom-color:var(--vermelho-500);}
-  .tab .tab-n{display:inline-block;font-size:0.72rem;font-weight:800;color:var(--alerta-txt);background:var(--alerta-bg);border:1px solid var(--alerta-borda);border-radius:9999px;padding:0 0.5rem;margin-left:0.35rem;}
-  .tab .tab-n.zero{color:var(--cinza-500);background:var(--cinza-100);border-color:var(--cinza-200);}
-  /* grupos de comentarios */
-  .grupo{background:#fff;border:1px solid var(--cinza-200);border-radius:var(--radius-xl);margin-bottom:1.1rem;overflow:hidden;}
-  .grupo-head{background:var(--cinza-50);border-bottom:1px solid var(--cinza-200);padding:0.85rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;}
-  .grupo-head h3{font-size:0.98rem;color:var(--cinza-900);}
-  .grupo-head .n{font-size:0.75rem;font-weight:800;color:#fff;background:var(--vermelho-500);border-radius:9999px;padding:0.15rem 0.6rem;flex-shrink:0;}
-  .grupo.conclusao{border-color:var(--sucesso-borda);}
-  .grupo.conclusao .grupo-head{background:var(--sucesso-bg);border-bottom-color:var(--sucesso-borda);}
-  .coment{padding:1rem 1.25rem;border-bottom:1px dashed var(--cinza-200);}
+  .tabs{display:flex;gap:0.4rem;border-bottom:2px solid var(--gray-200);margin-bottom:1.1rem;}
+  .tab{font-family:var(--font-heading);font-weight:700;font-size:0.92rem;color:var(--gray-500);background:none;border:none;border-bottom:3px solid transparent;padding:0.55rem 0.9rem;margin-bottom:-2px;cursor:pointer;}
+  .tab:hover{color:var(--gray-700);}
+  .tab[aria-selected="true"]{color:var(--red-600);border-bottom-color:var(--red-500);}
+  .tab .tab-n{display:inline-block;font-size:0.72rem;font-weight:800;color:var(--warning-text);background:var(--warning-bg);border:1px solid var(--warning-border);border-radius:9999px;padding:0 0.5rem;margin-left:0.35rem;}
+  .tab .tab-n.zero{color:var(--gray-500);background:var(--gray-100);border-color:var(--gray-200);}
+  /* grupos de comments */
+  .grupo{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius-xl);margin-bottom:1.1rem;overflow:hidden;}
+  .grupo-head{background:var(--gray-50);border-bottom:1px solid var(--gray-200);padding:0.85rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;}
+  .grupo-head h3{font-size:0.98rem;color:var(--gray-900);}
+  .grupo-head .n{font-size:0.75rem;font-weight:800;color:#fff;background:var(--red-500);border-radius:9999px;padding:0.15rem 0.6rem;flex-shrink:0;}
+  .grupo.conclusion{border-color:var(--success-border);}
+  .grupo.conclusion .grupo-head{background:var(--success-bg);border-bottom-color:var(--success-border);}
+  .coment{padding:1rem 1.25rem;border-bottom:1px dashed var(--gray-200);}
   .coment:last-child{border-bottom:none;}
-  .coment.conclusao{background:var(--sucesso-bg);}
-  .coment-top{display:flex;align-items:baseline;gap:0.6rem;margin-bottom:0.3rem;flex-wrap:wrap;}
-  .coment-nome{font-weight:700;color:var(--vermelho-700);font-size:0.9rem;}
-  .coment-data{font-size:0.78rem;color:var(--cinza-500);}
-  .coment-txt{font-size:0.95rem;color:var(--cinza-800);white-space:pre-wrap;}
-  .coment-tag{font-size:0.72rem;font-weight:700;color:var(--vermelho-700);background:var(--vermelho-50);border-radius:9999px;padding:0.1rem 0.55rem;}
-  .coment-tag.escopo{color:var(--cinza-600);background:var(--cinza-100);}
-  .coment-tag.ok{color:#fff;background:var(--sucesso);}
-  .coment-audio{display:flex;align-items:center;gap:0.6rem;margin-top:0.4rem;flex-wrap:wrap;}
-  .coment-audio audio{height:38px;max-width:280px;}
-  .coment-baixar{font-size:0.8rem;color:var(--vermelho-600);font-weight:600;text-decoration:none;}
-  .coment-baixar:hover{text-decoration:underline;}
+  .coment.conclusion{background:var(--success-bg);}
+  .comment-top{display:flex;align-items:baseline;gap:0.6rem;margin-bottom:0.3rem;flex-wrap:wrap;}
+  .comment-name{font-weight:700;color:var(--red-700);font-size:0.9rem;}
+  .comment-date{font-size:0.78rem;color:var(--gray-500);}
+  .comment-text{font-size:0.95rem;color:var(--gray-800);white-space:pre-wrap;}
+  .comment-tag{font-size:0.72rem;font-weight:700;color:var(--red-700);background:var(--red-50);border-radius:9999px;padding:0.1rem 0.55rem;}
+  .comment-tag.escopo{color:var(--gray-600);background:var(--gray-100);}
+  .comment-tag.ok{color:#fff;background:var(--success);}
+  .comment-audio{display:flex;align-items:center;gap:0.6rem;margin-top:0.4rem;flex-wrap:wrap;}
+  .comment-audio audio{height:38px;max-width:280px;}
+  .comment-download{font-size:0.8rem;color:var(--red-600);font-weight:600;text-decoration:none;}
+  .comment-download:hover{text-decoration:underline;}
   /* pending decision cards */
-  .gate-grupo-titulo{font-family:var(--font-heading);font-weight:700;font-size:0.85rem;color:var(--cinza-700);background:var(--cinza-100);border:1px solid var(--cinza-200);border-radius:var(--radius-md);padding:0.5rem 0.8rem;margin:1.4rem 0 0.7rem;word-break:break-all;}
+  .gate-grupo-titulo{font-family:var(--font-heading);font-weight:700;font-size:0.85rem;color:var(--gray-700);background:var(--gray-100);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:0.5rem 0.8rem;margin:1.4rem 0 0.7rem;word-break:break-all;}
   .gate-grupo-titulo:first-child{margin-top:0;}
-  .gate-grupo-legado{color:var(--cinza-500);}
-  .decisao{background:var(--alerta-bg);border:1px solid var(--alerta-borda);border-radius:var(--radius-xl);margin-bottom:1.1rem;padding:1rem 1.25rem;}
-  .decisao-top{display:flex;align-items:baseline;gap:0.6rem;margin-bottom:0.35rem;flex-wrap:wrap;}
-  .decisao-titulo{font-family:var(--font-heading);font-weight:700;font-size:0.95rem;color:var(--alerta-txt);}
-  .decisao-txt{font-size:0.95rem;color:var(--cinza-800);white-space:pre-wrap;}
-  .decisao-hint{font-size:0.8rem;color:var(--cinza-500);margin-top:0.5rem;}
-  .vazio{text-align:center;color:var(--cinza-500);padding:3rem 1rem;background:#fff;border:1px dashed var(--cinza-300);border-radius:var(--radius-xl);}
-  footer{padding:2rem 0;text-align:center;color:var(--cinza-500);font-size:0.82rem;}
+  .gate-group-legacy{color:var(--gray-500);}
+  .decision{background:var(--warning-bg);border:1px solid var(--warning-border);border-radius:var(--radius-xl);margin-bottom:1.1rem;padding:1rem 1.25rem;}
+  .decision-top{display:flex;align-items:baseline;gap:0.6rem;margin-bottom:0.35rem;flex-wrap:wrap;}
+  .decision-title{font-family:var(--font-heading);font-weight:700;font-size:0.95rem;color:var(--warning-text);}
+  .decision-text{font-size:0.95rem;color:var(--gray-800);white-space:pre-wrap;}
+  .decision-hint{font-size:0.8rem;color:var(--gray-500);margin-top:0.5rem;}
+  .empty{text-align:center;color:var(--gray-500);padding:3rem 1rem;background:#fff;border:1px dashed var(--gray-300);border-radius:var(--radius-xl);}
+  footer{padding:2rem 0;text-align:center;color:var(--gray-500);font-size:0.82rem;}
   @media(max-width:560px){ .head h1{font-size:1.35rem;} .filtro select{min-width:140px;} }
 
   /* Demo mode banner */
-  .banner-demo{background:var(--alerta-bg);border-bottom:1px solid var(--alerta-borda);color:var(--alerta-txt);font-weight:700;font-size:0.85rem;text-align:center;padding:0.6rem 1rem;}
+  .banner-demo{background:var(--warning-bg);border-bottom:1px solid var(--warning-border);color:var(--warning-text);font-weight:700;font-size:0.85rem;text-align:center;padding:0.6rem 1rem;}
 
   /* Decision card: structured fields plus per-item approval */
-  #pane-decisoes{padding-bottom:6rem;}
-  .decisao-campo{margin:0.55rem 0;}
-  .decisao-campo strong{display:block;font-size:0.72rem;font-weight:800;color:var(--cinza-600);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.15rem;}
-  .decisao-proposta-label{display:block;font-size:0.78rem;font-weight:700;color:var(--cinza-700);margin:0.85rem 0 0.35rem;}
-  .decisao-textarea{width:100%;font-family:var(--font-sans);font-size:0.92rem;color:var(--cinza-900);padding:0.65rem 0.8rem;border:1px solid var(--cinza-300);border-radius:var(--radius-md);resize:vertical;min-height:5rem;}
-  .decisao-textarea:focus{outline:none;border-color:var(--vermelho-500);box-shadow:0 0 0 3px oklch(0.62 0.20 25 / 18%);}
-  .decisao-textarea[readonly]{background:var(--cinza-100);color:var(--cinza-500);}
-  .decisao-contador{font-size:0.72rem;color:var(--cinza-500);text-align:right;margin-top:0.2rem;}
-  .decisao-acoes{display:flex;flex-wrap:wrap;gap:0.6rem;margin-top:0.75rem;}
+  #pane-decisions{padding-bottom:6rem;}
+  .decision-field{margin:0.55rem 0;}
+  .decision-field strong{display:block;font-size:0.72rem;font-weight:800;color:var(--gray-600);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.15rem;}
+  .decision-proposal-label{display:block;font-size:0.78rem;font-weight:700;color:var(--gray-700);margin:0.85rem 0 0.35rem;}
+  .decision-textarea{width:100%;font-family:var(--font-sans);font-size:0.92rem;color:var(--gray-900);padding:0.65rem 0.8rem;border:1px solid var(--gray-300);border-radius:var(--radius-md);resize:vertical;min-height:5rem;}
+  .decision-textarea:focus{outline:none;border-color:var(--red-500);box-shadow:0 0 0 3px oklch(0.62 0.20 25 / 18%);}
+  .decision-textarea[readonly]{background:var(--gray-100);color:var(--gray-500);}
+  .decision-counter{font-size:0.72rem;color:var(--gray-500);text-align:right;margin-top:0.2rem;}
+  .decision-actions{display:flex;flex-wrap:wrap;gap:0.6rem;margin-top:0.75rem;}
   /* Touch target of at least 44px for the approve and reject buttons (WCAG 2.5.5) */
-  .btn-decision{font-family:var(--font-heading);font-weight:700;font-size:0.9rem;min-height:44px;min-width:44px;padding:0.6rem 1.1rem;border-radius:var(--radius-md);cursor:pointer;border:1px solid var(--cinza-300);background:#fff;color:var(--cinza-800);}
-  .btn-decision.approve{border-color:var(--sucesso-borda);}
-  .btn-decision.approve:hover,.btn-decision.approve.active{background:var(--sucesso);border-color:var(--sucesso);color:#fff;}
-  .btn-decision.reject{border-color:var(--erro);}
-  .btn-decision.reject:hover,.btn-decision.reject.active{background:var(--erro);border-color:var(--erro);color:#fff;}
+  .btn-decision{font-family:var(--font-heading);font-weight:700;font-size:0.9rem;min-height:44px;min-width:44px;padding:0.6rem 1.1rem;border-radius:var(--radius-md);cursor:pointer;border:1px solid var(--gray-300);background:#fff;color:var(--gray-800);}
+  .btn-decision.approve{border-color:var(--success-border);}
+  .btn-decision.approve:hover,.btn-decision.approve.active{background:var(--success);border-color:var(--success);color:#fff;}
+  .btn-decision.reject{border-color:var(--error);}
+  .btn-decision.reject:hover,.btn-decision.reject.active{background:var(--error);border-color:var(--error);color:#fff;}
   .btn-decision:disabled{opacity:0.5;cursor:default;}
-  .decisao.marked-approved{border-color:var(--sucesso-borda);background:var(--sucesso-bg);}
-  .decisao.marked-rejected{border-color:var(--erro);background:oklch(0.97 0.03 27);}
-  .decisao.enviado{opacity:0.75;}
-  .coment-tag.error_message{color:#fff;background:var(--erro);}
+  .decision.marked-approved{border-color:var(--success-border);background:var(--success-bg);}
+  .decision.marked-rejected{border-color:var(--error);background:oklch(0.97 0.03 27);}
+  .decision.sent{opacity:0.75;}
+  .comment-tag.error_message{color:#fff;background:var(--error);}
 
   /* The "sent, not yet applied" state uses the warning tone: it is neither success*/
-  .coment-tag.pendente{color:var(--alerta-txt);background:var(--alerta-bg);border:1px solid var(--alerta-borda);}
+  .comment-tag.pending{color:var(--warning-text);background:var(--warning-bg);border:1px solid var(--warning-border);}
   /* The processed state means the decision is closed: a dimmer card than a plain
      sent one, signalling there is no further action available here */
-  .decisao.processada{opacity:0.6;}
+  .decision.processed{opacity:0.6;}
 
   /* v2.1: barra fixa "Send approvals (N)" */
-  .barra-aprovacoes{position:fixed;left:0;right:0;bottom:0;background:var(--cinza-900);color:#fff;display:none;align-items:center;justify-content:space-between;gap:1rem;padding:0.85rem 1.25rem;flex-wrap:wrap;z-index:20;box-shadow:0 -8px 24px -12px rgba(0,0,0,0.35);}
-  .barra-aprovacoes-texto{font-size:0.85rem;color:oklch(0.9 0 0);}
-  .barra-aprovacoes .btn:disabled{opacity:0.4;}
+  .approvals-bar{position:fixed;left:0;right:0;bottom:0;background:var(--gray-900);color:#fff;display:none;align-items:center;justify-content:space-between;gap:1rem;padding:0.85rem 1.25rem;flex-wrap:wrap;z-index:20;box-shadow:0 -8px 24px -12px rgba(0,0,0,0.35);}
+  .approvals-bar-text{font-size:0.85rem;color:oklch(0.9 0 0);}
+  .approvals-bar .btn:disabled{opacity:0.4;}
 
   /* Short confirmation message after sending */
-  .toast{position:fixed;left:50%;bottom:5.5rem;transform:translate(-50%,10px);background:var(--cinza-900);color:#fff;padding:0.65rem 1.1rem;border-radius:9999px;font-size:0.85rem;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:30;max-width:90vw;text-align:center;}
+  .toast{position:fixed;left:50%;bottom:5.5rem;transform:translate(-50%,10px);background:var(--gray-900);color:#fff;padding:0.65rem 1.1rem;border-radius:9999px;font-size:0.85rem;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:30;max-width:90vw;text-align:center;}
   .toast.show{opacity:1;transform:translate(-50%,0);}
 
-  @media(max-width:560px){ .barra-aprovacoes{padding:0.7rem 1rem;} .decisao-acoes{gap:0.5rem;} }
-  .idioma-label{ margin-left:auto; display:inline-flex; align-items:center; gap:.4rem; font-size:.82rem; opacity:.75; }
-  .idioma-select{ font:inherit; font-size:.82rem; padding:.2rem .4rem; border-radius:6px; border:1px solid rgba(0,0,0,.18); background:transparent; color:inherit; }
+  @media(max-width:560px){ .approvals-bar{padding:0.7rem 1rem;} .decision-actions{gap:0.5rem;} }
+  .language-label{ margin-left:auto; display:inline-flex; align-items:center; gap:.4rem; font-size:.82rem; opacity:.75; }
+  .language-select{ font:inherit; font-size:.82rem; padding:.2rem .4rem; border-radius:6px; border:1px solid rgba(0,0,0,.18); background:transparent; color:inherit; }
 </style>
 </head>
 <body>
@@ -218,7 +218,7 @@
   <h2 data-i18n="dash.title">Review Dashboard</h2>
   <p data-i18n="dash.restricted">Restricted area. Enter the password to see reviewer comments, conclusions, and pending decisions.</p>
   <input id="password" type="password" placeholder="Dashboard password" data-i18n-placeholder="dash.passwordPlaceholder" autocomplete="current-password">
-  <button id="entrar" class="btn" data-i18n="dash.signIn">Sign in</button>
+  <button id="signIn" class="btn" data-i18n="dash.signIn">Sign in</button>
   <div id="gate-err" class="err" role="alert"></div>
 </div>
 
@@ -230,44 +230,44 @@
   </div>
 
   <div class="toolbar">
-    <button id="atualizar" class="btn ghost" data-i18n="dash.refresh">Refresh</button>
+    <button id="refresh" class="btn ghost" data-i18n="dash.refresh">Refresh</button>
     <button id="copy-all" class="btn ghost" data-i18n="dash.copyAll">Copy all</button>
     <span id="count" class="count"></span>
-    <label class="idioma-label" for="f-idioma">
+    <label class="language-label" for="f-language">
       <span data-i18n="dash.language">Language</span>
-      <select id="f-idioma" class="idioma-select"></select>
+      <select id="f-language" class="language-select"></select>
     </label>
   </div>
 
   <!-- FILTERS: filled from the loaded data; changing one re-renders without a new request -->
   <div class="filtros">
     <label class="filtro"><span data-i18n="dash.projectLabel">Project</span>
-      <select id="f-projeto"><option value="" data-i18n="dash.allProjects">All projects</option></select>
+      <select id="f-project"><option value="" data-i18n="dash.allProjects">All projects</option></select>
     </label>
     <label class="filtro"><span data-i18n="dash.materialLabel">Material</span>
       <select id="f-material"><option value="" data-i18n="dash.allMaterials">All materials</option></select>
     </label>
-    <button id="f-limpar" class="filtro-limpar" type="button" data-i18n="dash.clearFilters">Clear filters</button>
+    <button id="f-clear" class="filtro-limpar" type="button" data-i18n="dash.clearFilters">Clear filters</button>
   </div>
 
   <!-- ABAS -->
   <div class="tabs" role="tablist">
-    <button id="tab-comentarios" class="tab" role="tab" aria-selected="true" aria-controls="pane-comentarios" data-i18n="dash.comments">Comments</button>
-    <button id="tab-decisoes" class="tab" role="tab" aria-selected="false" aria-controls="pane-decisoes"><span data-i18n="dash.pendingDecisions">Pending decisions</span> <span id="decisoes-n" class="tab-n zero">0</span></button>
+    <button id="tab-comments" class="tab" role="tab" aria-selected="true" aria-controls="pane-comments" data-i18n="dash.comments">Comments</button>
+    <button id="tab-decisions" class="tab" role="tab" aria-selected="false" aria-controls="pane-decisions"><span data-i18n="dash.pendingDecisions">Pending decisions</span> <span id="decisions-n" class="tab-n zero">0</span></button>
   </div>
 
-  <div id="pane-comentarios" role="tabpanel" aria-labelledby="tab-comentarios"></div>
-  <div id="pane-decisoes" role="tabpanel" aria-labelledby="tab-decisoes" style="display:none">
+  <div id="pane-comments" role="tabpanel" aria-labelledby="tab-comments"></div>
+  <div id="pane-decisions" role="tabpanel" aria-labelledby="tab-decisions" style="display:none">
     <!-- Each card is one item (approve/reject plus an editable proposal). The parent only
          toggles the tab's display; the per-render innerHTML belongs to the child below. -->
-    <div id="pane-decisoes-lista"></div>
+    <div id="pane-decisions-list"></div>
   </div>
 </main>
 
 <!-- Fixed batch-send bar; only visible on the pending decisions tab -->
-<div id="barra-aprovacoes" class="barra-aprovacoes" role="region" aria-label="Send approvals">
-  <span id="barra-aprovacoes-texto" class="barra-aprovacoes-texto" data-i18n="dash.markBeforeSending">Mark items to approve or reject before sending.</span>
-  <button id="btn-enviar-aprovacoes" class="btn" type="button" disabled>Send approvals (0)</button>
+<div id="approvals-bar" class="approvals-bar" role="region" aria-label="Send approvals">
+  <span id="approvals-bar-text" class="approvals-bar-text" data-i18n="dash.markBeforeSending">Mark items to approve or reject before sending.</span>
+  <button id="btn-send-approvals" class="btn" type="button" disabled>Send approvals (0)</button>
 </div>
 
 <footer data-i18n="dash.footer">Internal collaborative review dashboard. Do not share the password outside the team.</footer>
@@ -287,21 +287,21 @@
   function detectarIdioma(){
     var salvo = "";
     try{ salvo = localStorage.getItem(LS_IDIOMA) || ""; }catch(e){}
-    var pedido = String(salvo || navigator.language || "en").toLowerCase().replace(/_/g, "-");
-    var codigos = Object.keys(I18N);
+    var request = String(salvo || navigator.language || "en").toLowerCase().replace(/_/g, "-");
+    var codes = Object.keys(I18N);
     var i;
-    for(i=0;i<codigos.length;i++) if(codigos[i].toLowerCase() === pedido) return codigos[i];
-    var raiz = pedido.split("-")[0];
-    for(i=0;i<codigos.length;i++) if(codigos[i].toLowerCase() === raiz) return codigos[i];
-    for(i=0;i<codigos.length;i++) if(codigos[i].toLowerCase().split("-")[0] === raiz) return codigos[i];
+    for(i=0;i<codes.length;i++) if(codes[i].toLowerCase() === request) return codes[i];
+    var scope = request.split("-")[0];
+    for(i=0;i<codes.length;i++) if(codes[i].toLowerCase() === scope) return codes[i];
+    for(i=0;i<codes.length;i++) if(codes[i].toLowerCase().split("-")[0] === scope) return codes[i];
     return "en";
   }
-  var IDIOMA = detectarIdioma();
-  function T(chave){
-    var dic = I18N[IDIOMA] || {};
-    if(chave in dic) return dic[chave];
+  var LANGUAGE = detectarIdioma();
+  function T(key){
+    var dic = I18N[LANGUAGE] || {};
+    if(key in dic) return dic[key];
     var base = I18N.en || {};
-    return (chave in base) ? base[chave] : chave;
+    return (key in base) ? base[key] : key;
   }
   // Fills every element carrying data-i18n. Runs once at load and again on every
   // language change, so the static markup and the rendered cards stay in step.
@@ -310,29 +310,29 @@
   // with its own key name - "dash.refresh" on the refresh button. Leaving the
   // markup untouched instead keeps the English that is already written in it,
   // so a missed build step degrades to plain English rather than to gibberish.
-  function temTraducao(chave){
-    var dic = I18N[IDIOMA] || {};
-    if(chave in dic) return true;
+  function hasTranslation(key){
+    var dic = I18N[LANGUAGE] || {};
+    if(key in dic) return true;
     var base = I18N.en || {};
-    return chave in base;
+    return key in base;
   }
-  function aplicarTraducoes(raiz){
-    var escopo = raiz || document;
+  function applyTranslations(scope){
+    var escopo = scope || document;
     var nos = escopo.querySelectorAll("[data-i18n]");
     for(var i=0;i<nos.length;i++){
-      var chave = nos[i].getAttribute("data-i18n");
-      if(!temTraducao(chave)) continue;
-      var texto = T(chave);
+      var key = nos[i].getAttribute("data-i18n");
+      if(!hasTranslation(key)) continue;
+      var text = T(key);
       // A value carrying markup (the demo banner has a <strong>) goes in as HTML.
       // These strings come from our own dictionary files, never from a reviewer.
-      if(texto.indexOf("<") !== -1) nos[i].innerHTML = texto; else nos[i].textContent = texto;
+      if(text.indexOf("<") !== -1) nos[i].innerHTML = text; else nos[i].textContent = text;
     }
     var comPlaceholder = escopo.querySelectorAll("[data-i18n-placeholder]");
     for(var j=0;j<comPlaceholder.length;j++){
       var chaveP = comPlaceholder[j].getAttribute("data-i18n-placeholder");
-      if(temTraducao(chaveP)) comPlaceholder[j].setAttribute("placeholder", T(chaveP));
+      if(hasTranslation(chaveP)) comPlaceholder[j].setAttribute("placeholder", T(chaveP));
     }
-    try{ document.documentElement.lang = IDIOMA; }catch(e){}
+    try{ document.documentElement.lang = LANGUAGE; }catch(e){}
   }
 
   // Single source for both server function URLs used here:
@@ -342,7 +342,7 @@
   var FN_LISTAR = "{{EDGE_FN_URL}}";                                   // the read function
   var FN_APROVACOES = FN_LISTAR.replace("read-feedback", "approvals"); // per-item approval
   var LS_SENHA = "pa_painel_senha";       // unchanged key, so an existing auto-login keeps working
-  var LEGADO = T("dash.legacy");                // label for legacy rows with no scope
+  var LEGACY_LABEL = T("dash.legacy");                // label for legacy rows with no scope
   var SECAO_CONCLUSAO = "Review conclusion"; // section used by the finish button
   var MAX_PROPOSTA = 5000;                // character limit for the editable proposal
   var MODO_DEMO = location.hash.indexOf("fixtures") !== -1; // the quality gate test harness (index.html#fixtures)
@@ -350,22 +350,22 @@
   var gate = document.getElementById("gate");
   var app = document.getElementById("app");
   var bannerDemo = document.getElementById("banner-demo");
-  var senhaInput = document.getElementById("password");
+  var passwordInput = document.getElementById("password");
   var gateErr = document.getElementById("gate-err");
-  var paneComentarios = document.getElementById("pane-comentarios");
-  var paneDecisoes = document.getElementById("pane-decisoes");
-  var paneDecisoesLista = document.getElementById("pane-decisoes-lista");
-  var barraAprovacoes = document.getElementById("barra-aprovacoes");
-  var btnEnviarAprovacoes = document.getElementById("btn-enviar-aprovacoes");
+  var commentsPane = document.getElementById("pane-comments");
+  var decisionsPane = document.getElementById("pane-decisions");
+  var decisionsList = document.getElementById("pane-decisions-list");
+  var approvalsBar = document.getElementById("approvals-bar");
+  var sendApprovalsBtn = document.getElementById("btn-send-approvals");
   var countEl = document.getElementById("count");
-  var selProjeto = document.getElementById("f-projeto");
+  var selProjeto = document.getElementById("f-project");
   var selMaterial = document.getElementById("f-material");
-  var tabComentarios = document.getElementById("tab-comentarios");
-  var tabDecisoes = document.getElementById("tab-decisoes");
-  var decisoesN = document.getElementById("decisoes-n");
-  var dadosAtuais = [];     // everything the server returned; filters act only here
+  var commentsTab = document.getElementById("tab-comments");
+  var decisionsTab = document.getElementById("tab-decisions");
+  var decisionsCount = document.getElementById("decisions-n");
+  var currentData = [];     // everything the server returned; filters act only here
   var senhaAtual = "";      // password held in memory, used to record approvals
-  var decisoesLocais = {};  // id (feedback.id) -> {verdict:'approved'|'rejected'|null, edited_request:string, enviado:bool}
+  var localDecisions = {};  // id (feedback.id) -> {verdict:'approved'|'rejected'|null, edited_request:string, sent:bool}
   // Maps an item id to its real server-side state.
   // It comes from the approvals function and is the server's TRUTH, surviving a
   // reload, unlike the local draft above which only lives until the page closes.
@@ -379,12 +379,12 @@
     catch(e){ return iso; }
   }
   function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
-  function tipoDe(f){ return f.type || "comment"; }          // linhas antigas podem vir sem tipo
-  function projetoDe(f){ return f.project || LEGADO; }
-  function materialDe(f){ return f.material || LEGADO; }
+  function tipoDe(f){ return f.type || "comment"; }          // lines antigas podem vir sem kind
+  function projectOf(f){ return f.project || LEGACY_LABEL; }
+  function materialOf(f){ return f.material || LEGACY_LABEL; }
 
-  async function carregar(senha){
-    var res = await fetch(FN_LISTAR,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:senha})});
+  async function carregar(password){
+    var res = await fetch(FN_LISTAR,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:password})});
     if(res.status===401){ throw new Error("password"); }
     if(!res.ok){ throw new Error("http"); }
     var body = await res.json();
@@ -395,11 +395,11 @@
   // Without this the dashboard only knew the browser's local memory, and an item
   // already decided and sent would show its approve and reject buttons again on
   // a fresh page load.
-  async function carregarAprovacoes(senha){
+  async function loadApprovals(password){
     // Requesting non-pending rows too is REQUIRED: without it the backend returns
     // only pending ones, so already-processed decisions would never come back and
     // their closed state would be lost, reopening the buttons.
-    var res = await fetch(FN_APROVACOES,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:senha,action:"list",pending_only:false})});
+    var res = await fetch(FN_APROVACOES,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:password,action:"list",pending_only:false})});
     if(!res.ok){ throw new Error("http"); }
     var body = await res.json();
     return body.approvals || [];
@@ -407,7 +407,7 @@
 
   function applyServerStates(lista){
     serverStates = { porId: {}, porGateItem: {} };
-    // the listing returns newest first, so the FIRST one seen per key is the most chave,
+    // the listing returns newest first, so the FIRST one seen per key is the most key,
     // the most recent record wins if an item was decided more than once
 
     (lista || []).forEach(function(r){
@@ -426,7 +426,7 @@
 
   // Matches a decision card against the server record: by decision id first,
   // falling back to the gate file and item number pair.
-  function estadoServidorDe(f, item){
+  function serverStateFor(f, item){
     var porId = serverStates.porId[String(f.id)];
     if(porId){ return porId; }
     if(item && item.gate_file != null && item.item_number != null){
@@ -445,35 +445,35 @@
     }
   }
 
-  // ---- filtros (projeto + material) ------------------------------------------
+  // ---- filtros (project + material) ------------------------------------------
 
-  function opcoesOrdenadas(mapa){
+  function sortedOptions(mapa){
     // sort alphabetically and push the legacy label to the end
     var arr = Object.keys(mapa).sort(function(a,b){ return a.localeCompare(b,"pt-BR"); });
-    var i = arr.indexOf(LEGADO);
-    if(i >= 0){ arr.splice(i,1); arr.push(LEGADO); }
+    var i = arr.indexOf(LEGACY_LABEL);
+    if(i >= 0){ arr.splice(i,1); arr.push(LEGACY_LABEL); }
     return arr;
   }
 
-  function preencherSelect(sel, valores, rotuloTodos){
+  function preencherSelect(sel, values, rotuloTodos){
     var atual = sel.value;
     sel.innerHTML = "";
     var opt0 = document.createElement("option");
     opt0.value = ""; opt0.textContent = rotuloTodos;
     sel.appendChild(opt0);
-    valores.forEach(function(v){
+    values.forEach(function(v){
       var o = document.createElement("option");
       o.value = v; o.textContent = v;
       sel.appendChild(o);
     });
     // keeps the previous selection if it still exists in the new data
-    if(atual && valores.indexOf(atual) >= 0){ sel.value = atual; } else { sel.value = ""; }
+    if(atual && values.indexOf(atual) >= 0){ sel.value = atual; } else { sel.value = ""; }
   }
 
   function popularFiltros(){
     var projetos = {};
-    dadosAtuais.forEach(function(f){ projetos[projetoDe(f)] = true; });
-    preencherSelect(selProjeto, opcoesOrdenadas(projetos), "All projects");
+    currentData.forEach(function(f){ projetos[projectOf(f)] = true; });
+    preencherSelect(selProjeto, sortedOptions(projetos), "All projects");
     popularMateriais();
   }
 
@@ -481,51 +481,51 @@
     // materials depend on the chosen project, avoiding empty combinations
     var p = selProjeto.value;
     var materiais = {};
-    dadosAtuais.forEach(function(f){
-      if(p && projetoDe(f) !== p){ return; }
-      materiais[materialDe(f)] = true;
+    currentData.forEach(function(f){
+      if(p && projectOf(f) !== p){ return; }
+      materiais[materialOf(f)] = true;
     });
-    preencherSelect(selMaterial, opcoesOrdenadas(materiais), "All materials");
+    preencherSelect(selMaterial, sortedOptions(materiais), "All materials");
   }
 
   function passaFiltro(f){
-    if(selProjeto.value && projetoDe(f) !== selProjeto.value){ return false; }
-    if(selMaterial.value && materialDe(f) !== selMaterial.value){ return false; }
+    if(selProjeto.value && projectOf(f) !== selProjeto.value){ return false; }
+    if(selMaterial.value && materialOf(f) !== selMaterial.value){ return false; }
     return true;
   }
 
   selProjeto.addEventListener("change", function(){ popularMateriais(); renderTudo(); });
   selMaterial.addEventListener("change", renderTudo);
-  document.getElementById("f-limpar").addEventListener("click", function(){
+  document.getElementById("f-clear").addEventListener("click", function(){
     selProjeto.value = ""; popularMateriais(); selMaterial.value = ""; renderTudo();
   });
 
   // ---- abas -------------------------------------------------------------------
 
   function ativarAba(qual){
-    var comentarios = (qual === "comentarios");
-    tabComentarios.setAttribute("aria-selected", comentarios ? "true" : "false");
-    tabDecisoes.setAttribute("aria-selected", comentarios ? "false" : "true");
-    paneComentarios.style.display = comentarios ? "block" : "none";
-    paneDecisoes.style.display = comentarios ? "none" : "block";
-    if(barraAprovacoes){ barraAprovacoes.style.display = comentarios ? "none" : "flex"; }
+    var comments = (qual === "comments");
+    commentsTab.setAttribute("aria-selected", comments ? "true" : "false");
+    decisionsTab.setAttribute("aria-selected", comments ? "false" : "true");
+    commentsPane.style.display = comments ? "block" : "none";
+    decisionsPane.style.display = comments ? "none" : "block";
+    if(approvalsBar){ approvalsBar.style.display = comments ? "none" : "flex"; }
   }
-  tabComentarios.addEventListener("click", function(){ ativarAba("comentarios"); });
-  tabDecisoes.addEventListener("click", function(){ ativarAba("decisoes"); });
+  commentsTab.addEventListener("click", function(){ ativarAba("comments"); });
+  decisionsTab.addEventListener("click", function(){ ativarAba("decisions"); });
 
   // ---- render -----------------------------------------------------------------
 
   function escopoTag(f){
     // show project and material per row when the filter is on All
     if(selProjeto.value && selMaterial.value){ return ""; }
-    return '<span class="coment-tag escopo">' + esc(projetoDe(f)) + ' · ' + esc(materialDe(f)) + '</span>';
+    return '<span class="comment-tag escopo">' + esc(projectOf(f)) + ' · ' + esc(materialOf(f)) + '</span>';
   }
 
-  function renderComentarios(feedbacks){
+  function renderComments(feedbacks){
     countEl.textContent = feedbacks.length + (feedbacks.length===1?" comment":" comments");
     if(!feedbacks.length){
-      var temDados = dadosAtuais.some(function(f){ return tipoDe(f) !== "decision"; });
-      paneComentarios.innerHTML = '<div class="vazio">' + (temDados
+      var hasData = currentData.some(function(f){ return tipoDe(f) !== "decision"; });
+      commentsPane.innerHTML = '<div class="empty">' + (hasData
         ? "No comments match this filter. Adjust the project or material above."
         : "No comments yet. As soon as a reviewer comments, it shows up here.") + '</div>';
       return;
@@ -534,9 +534,9 @@
     // groups containing a reviewer conclusion float to the top
     var grupos = {}; var ordem = [];
     feedbacks.forEach(function(f){
-      var chave = f.section || "(no section)";
-      if(!grupos[chave]){ grupos[chave]=[]; ordem.push(chave); }
-      grupos[chave].push(f);
+      var key = f.section || "(no section)";
+      if(!grupos[key]){ grupos[key]=[]; ordem.push(key); }
+      grupos[key].push(f);
     });
     ordem.sort(function(a,b){
       var ca = grupos[a].some(function(f){ return tipoDe(f)==="conclusion"; }) ? 0 : 1;
@@ -547,22 +547,22 @@
     ordem.forEach(function(sec){
       var arr = grupos[sec];
       var groupHasConclusion = arr.some(function(f){ return tipoDe(f)==="conclusion"; });
-      html += '<div class="grupo' + (groupHasConclusion ? ' conclusao' : '') + '"><div class="grupo-head"><h3>' + esc(sec) + '</h3><span class="n">' + arr.length + '</span></div>';
+      html += '<div class="grupo' + (groupHasConclusion ? ' conclusion' : '') + '"><div class="grupo-head"><h3>' + esc(sec) + '</h3><span class="n">' + arr.length + '</span></div>';
       arr.forEach(function(f){
         var isConclusion = tipoDe(f)==="conclusion";
-        var corpo = "";
-        if(f.comment){ corpo += '<div class="coment-txt">'+esc(f.comment)+'</div>'; }
-        if(f.audio_url){ corpo += '<div class="coment-audio"><audio controls preload="none" src="'+esc(f.audio_url)+'"></audio><a class="coment-baixar" href="'+esc(f.audio_url)+'">'+esc(T("dash.download"))+'</a></div>'; }
-        if(!f.comment && !f.audio_url){ corpo = '<div class="coment-txt" style="color:var(--cinza-400)">(no content)</div>'; }
+        var body = "";
+        if(f.comment){ body += '<div class="comment-text">'+esc(f.comment)+'</div>'; }
+        if(f.audio_url){ body += '<div class="comment-audio"><audio controls preload="none" src="'+esc(f.audio_url)+'"></audio><a class="comment-download" href="'+esc(f.audio_url)+'">'+esc(T("dash.download"))+'</a></div>'; }
+        if(!f.comment && !f.audio_url){ body = '<div class="comment-text" style="color:var(--gray-400)">(no content)</div>'; }
         var tags = "";
-        if(isConclusion){ tags += '<span class="coment-tag ok">' + esc(T("dash.reviewerFinished")) + '</span>'; }
-        if(f.audio_url){ tags += '<span class="coment-tag">' + esc(T("dash.audio")) + '</span>'; }
+        if(isConclusion){ tags += '<span class="comment-tag ok">' + esc(T("dash.reviewerFinished")) + '</span>'; }
+        if(f.audio_url){ tags += '<span class="comment-tag">' + esc(T("dash.audio")) + '</span>'; }
         tags += escopoTag(f);
-        html += '<div class="coment' + (isConclusion ? ' conclusao' : '') + '"><div class="coment-top"><span class="coment-nome">'+esc(f.reviewer_name)+'</span><span class="coment-data">'+esc(fmtData(f.created_at))+'</span>'+tags+'</div>'+corpo+'</div>';
+        html += '<div class="coment' + (isConclusion ? ' conclusion' : '') + '"><div class="comment-top"><span class="comment-name">'+esc(f.reviewer_name)+'</span><span class="comment-date">'+esc(fmtData(f.created_at))+'</span>'+tags+'</div>'+body+'</div>';
       });
       html += '</div>';
     });
-    paneComentarios.innerHTML = html;
+    commentsPane.innerHTML = html;
   }
 
   // ---- pending decisions: per-item approval ----------------------------
@@ -581,118 +581,118 @@
     return null;
   }
 
-  function estadoDecisao(id){
-    if(!decisoesLocais[id]){ decisoesLocais[id] = {verdict:null, edited_request:"", enviado:false}; }
-    return decisoesLocais[id];
+  function decisionState(id){
+    if(!localDecisions[id]){ localDecisions[id] = {verdict:null, edited_request:"", sent:false}; }
+    return localDecisions[id];
   }
 
-  function contarMarcadas(){
+  function countMarked(){
     var n = 0;
-    Object.keys(decisoesLocais).forEach(function(id){
-      var d = decisoesLocais[id];
-      if(d && d.verdict && !d.enviado){ n++; }
+    Object.keys(localDecisions).forEach(function(id){
+      var d = localDecisions[id];
+      if(d && d.verdict && !d.sent){ n++; }
     });
     return n;
   }
 
   function atualizarBarra(){
-    if(!btnEnviarAprovacoes) return;
-    var n = contarMarcadas();
-    btnEnviarAprovacoes.disabled = (n === 0);
-    btnEnviarAprovacoes.textContent = T("dash.sendApprovals") + " (" + n + ")";
+    if(!sendApprovalsBtn) return;
+    var n = countMarked();
+    sendApprovalsBtn.disabled = (n === 0);
+    sendApprovalsBtn.textContent = T("dash.sendApprovals") + " (" + n + ")";
   }
 
   function renderCardItemV1(f, item){
     var id = f.id;
-    var est = estadoDecisao(id);
+    var est = decisionState(id);
     // The SERVER state wins.
     // It falls back to local state only when the server has no record at all for
     // this item, which keeps a decided-and-sent item from showing its buttons again.
     // buttons again on a fresh page load.
-    var srv = estadoServidorDe(f, item);
+    var srv = serverStateFor(f, item);
     var propostaAtual = (est.edited_request && est.edited_request.length) ? est.edited_request : (item.proposal || "");
-    var editado = !!(est.edited_request && est.edited_request.trim() && est.edited_request.trim() !== (item.proposal || "").trim());
-    var classes = "decisao item-v1";
+    var edited = !!(est.edited_request && est.edited_request.trim() && est.edited_request.trim() !== (item.proposal || "").trim());
+    var classes = "decision item-v1";
     var badge = "";
-    var bloqueado = false;
+    var blocked = false;
 
     if(srv && srv.processed_at != null){
       // Processed means the watcher stamped the gate: decision closed, no going back.
-      bloqueado = true;
-      classes += srv.verdict === "approved" ? " processada processed-approved" : " processada processed-rejected";
+      blocked = true;
+      classes += srv.verdict === "approved" ? " processed processed-approved" : " processed processed-rejected";
       badge = srv.verdict === "approved"
-        ? '<span class="coment-tag ok">' + T("dash.applied") + '</span>'
-        : '<span class="coment-tag erro">' + T("dash.rejected") + '</span>';
+        ? '<span class="comment-tag ok">' + T("dash.applied") + '</span>'
+        : '<span class="comment-tag error">' + T("dash.rejected") + '</span>';
     } else if(srv){
       // A server record not yet processed means the owner sent it and the watcher
-      bloqueado = true;
-      classes += srv.verdict === "approved" ? " enviado enviado-aprovado" : " enviado enviado-rejeitado";
-      badge = '<span class="coment-tag pendente">' + T("dash.awaitingWatcher") + ' (' + T(srv.verdict === "approved" ? "dash.approvedVerdict" : "dash.rejectedVerdict") + ')</span>';
-    } else if(est.enviado){
+      blocked = true;
+      classes += srv.verdict === "approved" ? " sent sent-approved" : " sent sent-rejected";
+      badge = '<span class="comment-tag pending">' + T("dash.awaitingWatcher") + ' (' + T(srv.verdict === "approved" ? "dash.approvedVerdict" : "dash.rejectedVerdict") + ')</span>';
+    } else if(est.sent){
       // optimistic: just sent in this session, the server has not confirmed yet
       // (slow network, or demo mode). Same badge as the pending state above.
-      bloqueado = true;
-      classes += est.verdict === "approved" ? " enviado enviado-aprovado" : " enviado enviado-rejeitado";
-      badge = '<span class="coment-tag pendente">' + T("dash.awaitingWatcher") + ' (' + T(est.verdict === "approved" ? "dash.approvedVerdict" : "dash.rejectedVerdict") + ')</span>';
+      blocked = true;
+      classes += est.verdict === "approved" ? " sent sent-approved" : " sent sent-rejected";
+      badge = '<span class="comment-tag pending">' + T("dash.awaitingWatcher") + ' (' + T(est.verdict === "approved" ? "dash.approvedVerdict" : "dash.rejectedVerdict") + ')</span>';
     } else if(est.verdict === "approved"){
       classes += " marked-approved";
-      badge = '<span class="coment-tag ok">' + T("dash.markedApprove") + '</span>';
+      badge = '<span class="comment-tag ok">' + T("dash.markedApprove") + '</span>';
     } else if(est.verdict === "rejected"){
       classes += " marked-rejected";
-      badge = '<span class="coment-tag erro">' + T("dash.markedReject") + '</span>';
+      badge = '<span class="comment-tag error">' + T("dash.markedReject") + '</span>';
     }
-    if(editado){ badge += ' <span class="coment-tag">' + T("dash.proposalEdited") + '</span>'; }
+    if(edited){ badge += ' <span class="comment-tag">' + T("dash.proposalEdited") + '</span>'; }
 
     var restantes = MAX_PROPOSTA - propostaAtual.length;
     var idAttr = esc(String(id));
     var numeroItem = esc(String(item.item_number != null ? item.item_number : "?"));
-    var markedApprove = est.verdict === "approved" && !bloqueado;
-    var markedReject = est.verdict === "rejected" && !bloqueado;
+    var markedApprove = est.verdict === "approved" && !blocked;
+    var markedReject = est.verdict === "rejected" && !blocked;
     // A locked item (already decided and sent, pending or processed) NEVER shows
     // its buttons again. Not disabled: OMITTED. Disabled-but-visible buttons at
     // half opacity read as "try again", which is exactly wrong here.
-    var acoesHtml = bloqueado ? '' :
-      '<div class="decisao-acoes">' +
+    var actionsHtml = blocked ? '' :
+      '<div class="decision-actions">' +
         '<button type="button" class="btn-decision approve' + (markedApprove ? ' active' : '') + '" data-id="' + idAttr + '" data-action="approved">' + esc(T("dash.approve")) + '</button>' +
         '<button type="button" class="btn-decision reject' + (markedReject ? ' active' : '') + '" data-id="' + idAttr + '" data-action="rejected">' + esc(T("dash.reject")) + '</button>' +
       '</div>';
 
     return '<div class="' + classes + '" data-id="' + idAttr + '">' +
-      '<div class="decisao-top">' +
-        '<span class="decisao-titulo">⏳ Item ' + numeroItem + ': ' + esc(item.secao_alvo || f.section || "Pending decision") + '</span>' +
-        '<span class="coment-data">' + esc(fmtData(f.created_at)) + '</span>' +
+      '<div class="decision-top">' +
+        '<span class="decision-title">⏳ Item ' + numeroItem + ': ' + esc(item.target_section || f.section || "Pending decision") + '</span>' +
+        '<span class="comment-date">' + esc(fmtData(f.created_at)) + '</span>' +
         escopoTag(f) + badge +
       '</div>' +
-      '<div class="decisao-campo"><strong>' + esc(T("dash.reviewerRequest")) + '</strong><div class="decisao-txt">' + esc(item.pedido || "") + '</div></div>' +
-      (item.transcript ? '<div class="decisao-campo"><strong>' + esc(T("dash.transcript")) + '</strong><div class="decisao-txt">' + esc(item.transcript) + '</div></div>' : '') +
-      '<div class="decisao-campo"><strong>' + esc(T("dash.whyStructural")) + '</strong><div class="decisao-txt">' + esc(item.rationale || "") + '</div></div>' +
-      '<label class="decisao-proposta-label" for="proposta-' + idAttr + '">' + esc(T("dash.proposalLabel")) + '</label>' +
-      '<textarea id="proposta-' + idAttr + '" class="decisao-textarea" data-id="' + idAttr + '" maxlength="' + MAX_PROPOSTA + '"' + (bloqueado ? ' readonly' : '') + '>' + esc(propostaAtual) + '</textarea>' +
-      '<div class="decisao-contador" data-contador-de="' + idAttr + '">' + restantes + ' de ' + MAX_PROPOSTA + ' caracteres restantes</div>' +
-      acoesHtml +
-      '<div class="decisao-hint">' + esc(T("dash.gateLabel")) + ': ' + esc(item.gate_file || "?") + ' · ' + esc(T("dash.itemLabel")) + ' ' + numeroItem + '</div>' +
+      '<div class="decision-field"><strong>' + esc(T("dash.reviewerRequest")) + '</strong><div class="decision-text">' + esc(item.request || "") + '</div></div>' +
+      (item.transcript ? '<div class="decision-field"><strong>' + esc(T("dash.transcript")) + '</strong><div class="decision-text">' + esc(item.transcript) + '</div></div>' : '') +
+      '<div class="decision-field"><strong>' + esc(T("dash.whyStructural")) + '</strong><div class="decision-text">' + esc(item.rationale || "") + '</div></div>' +
+      '<label class="decision-proposal-label" for="proposta-' + idAttr + '">' + esc(T("dash.proposalLabel")) + '</label>' +
+      '<textarea id="proposta-' + idAttr + '" class="decision-textarea" data-id="' + idAttr + '" maxlength="' + MAX_PROPOSTA + '"' + (blocked ? ' readonly' : '') + '>' + esc(propostaAtual) + '</textarea>' +
+      '<div class="decision-counter" data-contador-de="' + idAttr + '">' + restantes + ' de ' + MAX_PROPOSTA + ' caracteres restantes</div>' +
+      actionsHtml +
+      '<div class="decision-hint">' + esc(T("dash.gateLabel")) + ': ' + esc(item.gate_file || "?") + ' · ' + esc(T("dash.itemLabel")) + ' ' + numeroItem + '</div>' +
     '</div>';
   }
 
-  function renderCardLegado(f){
+  function renderLegacyCard(f){
     // A decision predating the structured format: read-only for compatibility,
     // and it never breaks the dashboard.
     return '<div class="decision">' +
-      '<div class="decisao-top">' +
-        '<span class="decisao-titulo">⏳ ' + esc(f.section || "Pending decision") + '</span>' +
-        '<span class="coment-data">' + esc(fmtData(f.created_at)) + '</span>' +
+      '<div class="decision-top">' +
+        '<span class="decision-title">⏳ ' + esc(f.section || "Pending decision") + '</span>' +
+        '<span class="comment-date">' + esc(fmtData(f.created_at)) + '</span>' +
         escopoTag(f) +
       '</div>' +
-      '<div class="decisao-txt">' + esc(f.comment || "(no details; see the gate file under docs/orchestration/structural-gate/)") + '</div>' +
-      '<div class="decisao-hint">' + esc(T("dash.fromLabel")) + ': ' + esc(f.reviewer_name || T("dash.correctionEngine")) + ' · ' + esc(T("dash.legacyNote")) + '</div>' +
+      '<div class="decision-text">' + esc(f.comment || "(no details; see the gate file under docs/orchestration/structural-gate/)") + '</div>' +
+      '<div class="decision-hint">' + esc(T("dash.fromLabel")) + ': ' + esc(f.reviewer_name || T("dash.correctionEngine")) + ' · ' + esc(T("dash.legacyNote")) + '</div>' +
     '</div>';
   }
 
-  function renderDecisoes(decisoes){
-    decisoesN.textContent = decisoes.length;
-    decisoesN.className = "tab-n" + (decisoes.length ? "" : " zero");
-    if(!decisoes.length){
-      paneDecisoesLista.innerHTML = '<div class="vazio">' + esc(T("dash.noPendingYet")) + '</div>';
+  function renderDecisions(decisions){
+    decisionsCount.textContent = decisions.length;
+    decisionsCount.className = "tab-n" + (decisions.length ? "" : " zero");
+    if(!decisions.length){
+      decisionsList.innerHTML = '<div class="empty">' + esc(T("dash.noPendingYet")) + '</div>';
       atualizarBarra();
       return;
     }
@@ -701,53 +701,53 @@
     // at the end.
     var ordemGates = [];
     var grupos = {};
-    var LEGADO_KEY = "__legado__";
-    decisoes.forEach(function(f){
+    var LEGADO_KEY = "__legacy__";
+    decisions.forEach(function(f){
       var item = parseItemV1(f);
-      var chave = item ? (item.gate_file || "(sem gate)") : LEGADO_KEY;
-      if(!(chave in grupos)){ grupos[chave] = []; ordemGates.push(chave); }
-      grupos[chave].push(item ? renderCardItemV1(f, item) : renderCardLegado(f));
+      var key = item ? (item.gate_file || "(sem gate)") : LEGADO_KEY;
+      if(!(key in grupos)){ grupos[key] = []; ordemGates.push(key); }
+      grupos[key].push(item ? renderCardItemV1(f, item) : renderLegacyCard(f));
     });
     var html = "";
-    ordemGates.forEach(function(chave){
-      var cartoes = grupos[chave];
-      if(chave === LEGADO_KEY){
-        html += '<div class="gate-grupo-titulo gate-grupo-legado">' + esc(T("dash.earlierDecisions")) + ' &middot; ' + cartoes.length + '</div>';
+    ordemGates.forEach(function(key){
+      var cards = grupos[key];
+      if(key === LEGADO_KEY){
+        html += '<div class="gate-grupo-titulo gate-group-legacy">' + esc(T("dash.earlierDecisions")) + ' &middot; ' + cards.length + '</div>';
       } else {
-        html += '<div class="gate-grupo-titulo">📄 Gate: ' + esc(chave) + ' · ' + cartoes.length + ' ' + (cartoes.length === 1 ? "item" : "itens") + '</div>';
+        html += '<div class="gate-grupo-titulo">📄 Gate: ' + esc(key) + ' · ' + cards.length + ' ' + (cards.length === 1 ? "item" : "items") + '</div>';
       }
-      html += cartoes.join("");
+      html += cards.join("");
     });
-    paneDecisoesLista.innerHTML = html;
+    decisionsList.innerHTML = html;
     atualizarBarra();
   }
 
   // clicking approve or reject marks locally (clicking the same button again clears it)
-  paneDecisoesLista.addEventListener("click", function(e){
+  decisionsList.addEventListener("click", function(e){
     var btn = e.target.closest ? e.target.closest(".btn-decision") : null;
     if(!btn || btn.disabled) return;
     var id = btn.getAttribute("data-id");
-    var acao = btn.getAttribute("data-action");
-    var est = estadoDecisao(id);
-    est.verdict = (est.verdict === acao) ? null : acao;
+    var action = btn.getAttribute("data-action");
+    var est = decisionState(id);
+    est.verdict = (est.verdict === action) ? null : action;
     renderTudo();
   });
 
   // typing in the proposal only updates the counter: re-rendering on every keystroke
   // would lose the cursor position. The rest of the card updates on blur.
-  paneDecisoesLista.addEventListener("input", function(e){
+  decisionsList.addEventListener("input", function(e){
     var ta = e.target;
-    if(!ta.classList || !ta.classList.contains("decisao-textarea")) return;
+    if(!ta.classList || !ta.classList.contains("decision-textarea")) return;
     var id = ta.getAttribute("data-id");
-    var est = estadoDecisao(id);
+    var est = decisionState(id);
     est.edited_request = ta.value;
     var restantes = MAX_PROPOSTA - ta.value.length;
-    var contador = paneDecisoesLista.querySelector('[data-contador-de="' + id + '"]');
+    var contador = decisionsList.querySelector('[data-contador-de="' + id + '"]');
     if(contador){ contador.textContent = restantes + " de " + MAX_PROPOSTA + " caracteres restantes"; }
   });
-  paneDecisoesLista.addEventListener("focusout", function(e){
+  decisionsList.addEventListener("focusout", function(e){
     var ta = e.target;
-    if(!ta.classList || !ta.classList.contains("decisao-textarea")) return;
+    if(!ta.classList || !ta.classList.contains("decision-textarea")) return;
     renderTudo();
   });
 
@@ -760,33 +760,33 @@
     mostrarToast._h = setTimeout(function(){ t.classList.remove("show"); }, 3500);
   }
 
-  async function enviarAprovacoes(){
-    var itens = [];
-    Object.keys(decisoesLocais).forEach(function(id){
-      var d = decisoesLocais[id];
-      if(!d || !d.verdict || d.enviado){ return; }
-      var f = dadosAtuais.filter(function(x){ return String(x.id) === String(id); })[0];
+  async function sendApprovals(){
+    var items = [];
+    Object.keys(localDecisions).forEach(function(id){
+      var d = localDecisions[id];
+      if(!d || !d.verdict || d.sent){ return; }
+      var f = currentData.filter(function(x){ return String(x.id) === String(id); })[0];
       var item = f ? parseItemV1(f) : null;
       // a legacy card has no gate reference, so it cannot be approved
       var registro = {
-        project: projetoDe(f), material: materialDe(f),
+        project: projectOf(f), material: materialOf(f),
         gate_file: item.gate_file, item_number: item.item_number,
         verdict: d.verdict, decision_id: (typeof f.id === "number" ? f.id : parseInt(f.id, 10))
       };
-      var editado = d.edited_request && d.edited_request.trim() && d.edited_request.trim() !== (item.proposal || "").trim();
-      if(editado){ registro.edited_request = d.edited_request.trim().slice(0, MAX_PROPOSTA); }
-      itens.push({id: id, registro: registro});
+      var edited = d.edited_request && d.edited_request.trim() && d.edited_request.trim() !== (item.proposal || "").trim();
+      if(edited){ registro.edited_request = d.edited_request.trim().slice(0, MAX_PROPOSTA); }
+      items.push({id: id, registro: registro});
     });
-    if(!itens.length) return;
+    if(!items.length) return;
 
-    var textoOriginal = btnEnviarAprovacoes.textContent;
-    btnEnviarAprovacoes.disabled = true;
-    btnEnviarAprovacoes.textContent = T("dash.sending");
+    var textoOriginal = sendApprovalsBtn.textContent;
+    sendApprovalsBtn.disabled = true;
+    sendApprovalsBtn.textContent = T("dash.sending");
 
     if(MODO_DEMO){
       // demo mode: no real network calls
-      itens.forEach(function(it){
-        decisoesLocais[it.id].enviado = true;
+      items.forEach(function(it){
+        localDecisions[it.id].sent = true;
         markSentOptimistically(it.registro); // optimistic: not processed yet means it is awaiting the watcher
       });
       renderTudo();
@@ -795,18 +795,18 @@
     }
 
     try{
-      // a Edge Function approvals aceita de 1 a 50 itens por chamada: lotes de 50
-      for(var i = 0; i < itens.length; i += 50){
-        var lote = itens.slice(i, i + 50);
+      // a Edge Function approvals aceita de 1 a 50 items por call: lotes de 50
+      for(var i = 0; i < items.length; i += 50){
+        var lote = items.slice(i, i + 50);
         var resp = await fetch(FN_APROVACOES, {
           method: "POST", headers: {"Content-Type":"application/json"},
           body: JSON.stringify({ password: senhaAtual, action: "record", approvals: lote.map(function(it){ return it.registro; }) })
         });
         if(!resp.ok){ throw new Error("http"); }
-        var corpo = await resp.json();
-        if(!corpo.ok){ throw new Error(corpo.error_message || "failed"); }
+        var body = await resp.json();
+        if(!body.ok){ throw new Error(body.error_message || "failed"); }
         lote.forEach(function(it){
-          decisoesLocais[it.id].enviado = true;
+          localDecisions[it.id].sent = true;
           // optimistic: mark as sent immediately rather than waiting for the next refresh
           // to hide the buttons; the next refresh or reload confirms it.
           markSentOptimistically(it.registro);
@@ -816,22 +816,22 @@
       mostrarToast(T("dash.sent"));
     }catch(e){
       mostrarToast(T("dash.sendFailed"));
-      btnEnviarAprovacoes.disabled = false;
-      btnEnviarAprovacoes.textContent = textoOriginal;
+      sendApprovalsBtn.disabled = false;
+      sendApprovalsBtn.textContent = textoOriginal;
     }
   }
-  btnEnviarAprovacoes.addEventListener("click", enviarAprovacoes);
+  sendApprovalsBtn.addEventListener("click", sendApprovals);
 
   // ---- language selector ----------------------------------------------------
   // Populated from whatever dictionaries were embedded, so adding a language is
   // still just adding a file: nothing here names them one by one.
   (function montarSeletorIdioma(){
-    var sel = document.getElementById("f-idioma");
+    var sel = document.getElementById("f-language");
     if(!sel) return;
     // One language is not a choice. Hiding the selector keeps a dashboard whose
     // dictionaries were never injected from showing an empty dropdown.
     if(Object.keys(I18N).length < 2){
-      var rotulo = sel.closest ? sel.closest(".idioma-label") : null;
+      var rotulo = sel.closest ? sel.closest(".language-label") : null;
       if(rotulo) rotulo.style.display = "none";
       return;
     }
@@ -839,49 +839,49 @@
       // looking for their language scans for the word they know, not for an
       // English label they may not read. The name travels inside the dictionary
       // (_name), so adding a language means adding a file and nothing else.
-    var codigos = Object.keys(I18N).sort();
-    for(var i=0;i<codigos.length;i++){
+    var codes = Object.keys(I18N).sort();
+    for(var i=0;i<codes.length;i++){
       var op = document.createElement("option");
-      op.value = codigos[i];
-      op.textContent = (I18N[codigos[i]] && I18N[codigos[i]]._name) || codigos[i];
-      if(codigos[i] === IDIOMA) op.selected = true;
+      op.value = codes[i];
+      op.textContent = (I18N[codes[i]] && I18N[codes[i]]._name) || codes[i];
+      if(codes[i] === LANGUAGE) op.selected = true;
       sel.appendChild(op);
     }
     sel.addEventListener("change", function(){
-      IDIOMA = sel.value;
-      try{ localStorage.setItem(LS_IDIOMA, IDIOMA); }catch(e){}
-      aplicarTraducoes();
+      LANGUAGE = sel.value;
+      try{ localStorage.setItem(LS_IDIOMA, LANGUAGE); }catch(e){}
+      applyTranslations();
       // The cards are built as strings, so they carry the old language until the
       // next render. Re-rendering is what actually changes them on screen.
       try{ renderTudo(); }catch(e){}
     });
   })();
 
-  aplicarTraducoes();
+  applyTranslations();
 
 
   function renderTudo(){
-    var filtrados = dadosAtuais.filter(passaFiltro);
-    var comentarios = filtrados.filter(function(f){ return tipoDe(f) !== "decision"; });
-    var decisoes = filtrados.filter(function(f){ return tipoDe(f) === "decision"; });
-    renderComentarios(comentarios);
-    renderDecisoes(decisoes);
+    var filtered = currentData.filter(passaFiltro);
+    var comments = filtered.filter(function(f){ return tipoDe(f) !== "decision"; });
+    var decisions = filtered.filter(function(f){ return tipoDe(f) === "decision"; });
+    renderComments(comments);
+    renderDecisions(decisions);
   }
 
   function receber(feedbacks){
-    dadosAtuais = feedbacks;
+    currentData = feedbacks;
     popularFiltros();
     renderTudo();
   }
 
   // ---- sign in / refresh / copy ------------------------------------------------
 
-  async function entrar(senha){
+  async function signIn(password){
     gateErr.textContent = "";
     try{
-      var fb = await carregar(senha);
-      senhaAtual = senha;
-      localStorage.setItem(LS_SENHA, senha);
+      var fb = await carregar(password);
+      senhaAtual = password;
+      localStorage.setItem(LS_SENHA, password);
       gate.style.display = "none";
       app.style.display = "block";
       receber(fb);
@@ -893,29 +893,29 @@
     // Fetches the real state of already-recorded decisions in parallel. A failure
     // here does not block login (the dashboard is already open with the comments);
     // it only leaves the pending/processed state unconfirmed until the next refresh.
-    try{ applyServerStates(await carregarAprovacoes(senha)); renderTudo(); }catch(e){}
+    try{ applyServerStates(await loadApprovals(password)); renderTudo(); }catch(e){}
   }
 
-  document.getElementById("entrar").addEventListener("click", function(){ entrar(senhaInput.value.trim()); });
-  senhaInput.addEventListener("keydown", function(e){ if(e.key==="Enter"){ entrar(senhaInput.value.trim()); } });
+  document.getElementById("signIn").addEventListener("click", function(){ signIn(passwordInput.value.trim()); });
+  passwordInput.addEventListener("keydown", function(e){ if(e.key==="Enter"){ signIn(passwordInput.value.trim()); } });
 
-  document.getElementById("atualizar").addEventListener("click", async function(){
+  document.getElementById("refresh").addEventListener("click", async function(){
     var s = localStorage.getItem(LS_SENHA); if(!s) return;
     var btn = this; btn.disabled = true; btn.textContent = T("dash.refreshing");
     try{ receber(await carregar(s)); }catch(e){}
-    try{ applyServerStates(await carregarAprovacoes(s)); renderTudo(); }catch(e){}
+    try{ applyServerStates(await loadApprovals(s)); renderTudo(); }catch(e){}
     btn.disabled = false; btn.textContent = T("dash.refresh");
   });
 
   // Copy all: copies what is visible on the comments tab under the current filter
   // (conclusions are marked; pending decisions are excluded, they belong to the engine)
   document.getElementById("copy-all").addEventListener("click", function(){
-    var filtrados = dadosAtuais.filter(passaFiltro).filter(function(f){ return tipoDe(f) !== "decision"; });
-    if(!filtrados.length) return;
-    var txt = filtrados.map(function(f){
-      var corpo = f.comment ? f.comment : (f.audio_url ? "[audio: "+f.audio_url+"]" : "(no content)");
+    var filtered = currentData.filter(passaFiltro).filter(function(f){ return tipoDe(f) !== "decision"; });
+    if(!filtered.length) return;
+    var txt = filtered.map(function(f){
+      var body = f.comment ? f.comment : (f.audio_url ? "[audio: "+f.audio_url+"]" : "(no content)");
       var marca = tipoDe(f)==="conclusion" ? "[CONCLUSION] " : "";
-      return "[" + projetoDe(f) + " · " + materialDe(f) + "] [" + (f.section||"") + "]\n" + marca + f.reviewer_name + " — " + fmtData(f.created_at) + "\n" + corpo + "\n";
+      return "[" + projectOf(f) + " · " + materialOf(f) + "] [" + (f.section||"") + "]\n" + marca + f.reviewer_name + " — " + fmtData(f.created_at) + "\n" + body + "\n";
     }).join("\n");
     navigator.clipboard.writeText(txt).then(function(){ var b=document.getElementById("copy-all"); b.textContent=T("dash.copied"); setTimeout(function(){b.textContent=T("dash.copyAll");},1500); });
   });
@@ -944,44 +944,44 @@
 
     {id: 9001, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T14:00:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
       comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-140000.md", item_number:1,
-        secao_alvo:"Step 4: Product photos", pedido:"A step is missing between 4 and 5 explaining what to do if a photo fails to upload.",
+        target_section:"Step 4: Product photos", request:"A step is missing between 4 and 5 explaining what to do if a photo fails to upload.",
         transcript:null, rationale:"Creates a new step, which renumbers the whole section (structural).",
         proposal:"Insert step 4.1, 'If the photo does not upload', with three quick tips, before the current step 5."})},
     {id: 9002, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T14:02:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
       comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-140000.md", item_number:2,
-        secao_alvo:"Signature and photos", pedido:"Swap the order: signature before the photos.",
+        target_section:"Signature and photos", request:"Swap the order: signature before the photos.",
         transcript:"I would rather sign before taking the photos, it feels more natural for the customer.", rationale:"Reorders two sections, changing the navigation (structural).",
         proposal:"Move the 'Signature' block before the 'Photos' block, adjusting the numbering."})},
     {id: 9003, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T14:04:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
       comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-140000.md", item_number:3,
-        secao_alvo:"Page hero", pedido:"Replace the top video with a photo carousel.",
+        target_section:"Page hero", request:"Replace the top video with a photo carousel.",
         transcript:null, rationale:"Touches the design system and the hero: outside the pointwise scope.",
         proposal:"Replace the video component with a carousel of four photos at the same height."})},
     {id: 9004, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T14:06:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
       comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-140000.md", item_number:4,
-        secao_alvo:"Introduction", pedido:"Explain more clearly why sign-up is required before the inspection.",
+        target_section:"Introduction", request:"Explain more clearly why sign-up is required before the inspection.",
         transcript:null, rationale:"Contradicts the project's recorded wording decision, so a human should confirm.",
         proposal:"Add one short paragraph at the start explaining the reason, citing the deadline."})},
     {id: 9005, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T13:40:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
       comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-134000.md", item_number:1,
-        secao_alvo:"Footer", pedido:"Add the support phone number to the footer.",
+        target_section:"Footer", request:"Add the support phone number to the footer.",
         transcript:null, rationale:"Navigation and footer are structural elements of the material.",
         proposal:"Add '+1 555 000 0000' to the footer, next to the contact email."})},
     {id: 9006, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T13:42:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
       comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-134000.md", item_number:2,
-        secao_alvo:"Explainer video", pedido:"Swap the video for a shorter one (the current one runs 6 minutes).",
+        target_section:"Explainer video", request:"Swap the video for a shorter one (the current one runs 6 minutes).",
         transcript:null, rationale:"Replacing the guide's main media is a structural content decision.",
         proposal:"Replace with the 2-minute short version (already recorded, link pending)."})},
     {id: 9007, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-08T10:00:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
       comment: "Older request, not in the structured format: review the wording of step 2 (legacy record)."},
     {id: 9008, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T14:08:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
       comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-140800.md", item_number:1,
-        secao_alvo:"Final button", pedido:"Change the button label from 'Send' to 'Complete sign-up'.",
+        target_section:"Final button", request:"Change the button label from 'Send' to 'Complete sign-up'.",
         transcript:null, rationale:"Primary conversion button: a structural copy change that needs approval.",
         proposal:"Change the final button label from 'Send' to 'Complete sign-up'."})},
     {id: 9009, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T14:10:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
       comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-140800.md", item_number:2,
-        secao_alvo:"FAQ section", pedido:"Add a frequently-asked-questions accordion at the end of the page.",
+        target_section:"FAQ section", request:"Add a frequently-asked-questions accordion at the end of the page.",
         transcript:null, rationale:"A new block on the page: structural, outside the original pointwise request.",
         proposal:"Create a FAQ block with four questions, right before the footer."})}
   ];
@@ -1001,14 +1001,14 @@
     {decision_id: 9009, gate_file: "sam-rivera-20260710-140800.md", item_number: 2, verdict: "rejected", processed_at: null}
   ];
 
-  function semearEstadosDemo(){
+  function seedDemoStates(){
     // pre-marks only the LOCAL states (marked or edited, not yet on the server);
     // the pending and processed states come from the fixtures instead
-    // applyServerStates(), chamada em iniciarModoDemo() (9001 e 9007 ficam limpos
+    // applyServerStates(), call em iniciarModoDemo() (9001 e 9007 ficam limpos
     // on purpose: "no record, buttons shown" is a state worth exercising too
-    decisoesLocais[9002] = {verdict:"approved", edited_request:"", enviado:false};
-    decisoesLocais[9003] = {verdict:"rejected", edited_request:"", enviado:false};
-    decisoesLocais[9004] = {verdict:null, edited_request:"Add one short paragraph at the start explaining the reason.", enviado:false};
+    localDecisions[9002] = {verdict:"approved", edited_request:"", sent:false};
+    localDecisions[9003] = {verdict:"rejected", edited_request:"", sent:false};
+    localDecisions[9004] = {verdict:null, edited_request:"Add one short paragraph at the start explaining the reason.", sent:false};
   }
 
   // ---- bootstrap: normal login, or demo mode ---------------------------
@@ -1017,10 +1017,10 @@
     if(bannerDemo){ bannerDemo.style.display = "block"; }
     gate.style.display = "none";
     app.style.display = "block";
-    semearEstadosDemo();
+    seedDemoStates();
     applyServerStates(FIXTURES_APROVACOES);
     receber(FIXTURES);
-    ativarAba("decisoes"); // this mode exists to exercise the approval flow
+    ativarAba("decisions"); // this mode exists to exercise the approval flow
   }
 
   if(MODO_DEMO){
@@ -1028,7 +1028,7 @@
   } else {
     // auto sign-in if a password is already stored
     var saved = localStorage.getItem(LS_SENHA);
-    if(saved){ entrar(saved); }
+    if(saved){ signIn(saved); }
   }
 })();
 </script>

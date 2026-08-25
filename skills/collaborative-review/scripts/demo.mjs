@@ -22,7 +22,7 @@
  */
 
 import { createServer } from "node:http";
-import { injetarIdiomas } from "./i18n.mjs";
+import { injectLanguages } from "./i18n.mjs";
 import { readFileSync, writeFileSync, mkdtempSync, rmSync, existsSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -168,7 +168,7 @@ const dashboardComUrl = dashboardTmpl.split("{{EDGE_FN_URL}}")
   .join(`http://localhost:${PORT}/functions/v1/read-feedback`);
 /* Same embedding the review kit gets, from the same function, so the dashboard
    and the kit can never end up on different sets of dictionaries. */
-const { html: dashboard, idiomas: idiomasPainel } = injetarIdiomas(dashboardComUrl);
+const { html: dashboard, idiomas: dashboardLanguages } = injectLanguages(dashboardComUrl);
 const dashboardPath = join(work, "dashboard.html");
 writeFileSync(dashboardPath, dashboard, "utf8");
 

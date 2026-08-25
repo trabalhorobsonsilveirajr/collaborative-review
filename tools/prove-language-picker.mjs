@@ -69,7 +69,7 @@ try {
   const codigoReal = pagina.slice(inicio, fim);
 
   const montar = (idiomaNavegador) =>
-    new Function("navigator", codigoReal + "\n return { T: T, IDIOMA: IDIOMA };")({ language: idiomaNavegador });
+    new Function("navigator", codigoReal + "\n return { T: T, LANGUAGE: LANGUAGE };")({ language: idiomaNavegador });
 
   /* The dictionaries really made it into the page, not just the marker. */
   relatar(!pagina.includes('/*__I18N__*/'), "the language marker was replaced, not shipped as-is");
@@ -87,8 +87,8 @@ try {
     ["", "en", "a browser reporting nothing gets English"],
   ];
   for (const [navegador, esperado, descricao] of CASOS) {
-    const { IDIOMA } = montar(navegador);
-    relatar(IDIOMA === esperado, `${String(navegador || "(empty)").padEnd(7)} -> ${IDIOMA.padEnd(6)} ${descricao}`);
+    const { LANGUAGE } = montar(navegador);
+    relatar(LANGUAGE === esperado, `${String(navegador || "(empty)").padEnd(7)} -> ${LANGUAGE.padEnd(6)} ${descricao}`);
   }
 
   /* Same key, genuinely different words: proof it is translating, not just

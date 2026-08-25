@@ -28,49 +28,49 @@
 
 import { readFileSync, writeFileSync, existsSync, copyFileSync, renameSync } from "node:fs";
 import { buildManifest } from "./section-manifest.mjs";
-import { carregarIdiomas, conferirCobertura, serializarParaKit, MARCADOR_I18N } from "./i18n.mjs";
+import { loadLanguages, checkCoverage, serializeForPage, I18N_MARKER } from "./i18n.mjs";
 import { resolve } from "node:path";
 
 // Accepted placeholder form: {{UPPERCASE_WITH_UNDERSCORES}}
 const RE_PLACEHOLDER = /\{\{([A-Za-z0-9_]+)\}\}/g;
 
-function falhar(mensagem, codigo = 1) {
-  console.error(`✗ ${mensagem}`);
-  process.exit(codigo);
+function fail(message, code = 1) {
+  console.error(`✗ ${message}`);
+  process.exit(code);
 }
-function avisar(mensagem) {
-  console.warn(`⚠ ${mensagem}`);
+function warn(message) {
+  console.warn(`⚠ ${message}`);
 }
 
 // ---------------------------------------------------------------------------
 // 1. Argumentos
 // ---------------------------------------------------------------------------
 const args = process.argv.slice(2);
-function lerArg(nome) {
+function readArg(nome) {
   const i = args.indexOf(`--${nome}`);
   return i >= 0 && i + 1 < args.length ? args[i + 1] : null;
 }
 
-const caminhoKit = lerArg("kit");
-const caminhoConfig = lerArg("config");
-const targetPath = lerArg("target");
+const kitPath = readArg("kit");
+const configPath = readArg("config");
+const targetPath = readArg("target");
 
-if (!caminhoKit || !caminhoConfig || !targetPath) {
-  falhar("Usage: node build-kit.mjs --kit <template.html> --config <config.json> --target <page.html>");
+if (!kitPath || !configPath || !targetPath) {
+  fail("Usage: node build-kit.mjs --kit <template.html> --config <config.json> --target <page.html>");
 }
-for (const [rotulo, caminho] of [["--kit", caminhoKit], ["--config", caminhoConfig], ["--target", targetPath]]) {
-  if (!existsSync(caminho)) falhar(`File for ${rotulo} not found: ${resolve(caminho)}`);
+for (const [label, path] of [["--kit", kitPath], ["--config", configPath], ["--target", targetPath]]) {
+  if (!existsSync(path)) fail(`File for ${label} not found: ${resolve(path)}`);
 }
 
 // ---------------------------------------------------------------------------
 // 2. Template: levantar os placeholders exigidos
 // ---------------------------------------------------------------------------
-const template = readFileSync(caminhoKit, "utf8");
+const template = readFileSync(kitPath, "utf8");
 const placeholders = new Set();
 for (const m of template.matchAll(RE_PLACEHOLDER)) placeholders.add(m[1]);
 
 if (placeholders.size === 0) {
-  avisar("The template has no {{...}} placeholders. Check that --kit really points at the template.");
+  warn("The template has no {{...}} placeholders. Check that --kit really points at the template.");
 }
 
 // ---------------------------------------------------------------------------
@@ -79,17 +79,17 @@ if (placeholders.size === 0) {
 let config;
 try {
   // Strips the byte-order mark Windows sometimes writes at the start of a file
-  config = JSON.parse(readFileSync(caminhoConfig, "utf8").replace(/^﻿/, ""));
+  config = JSON.parse(readFileSync(configPath, "utf8").replace(/^﻿/, ""));
 } catch (e) {
-  falhar(`Config is not valid JSON: ${e.message}`, 2);
+  fail(`Config is not valid JSON: ${e.message}`, 2);
 }
 if (typeof config !== "object" || config === null || Array.isArray(config)) {
-  falhar("Config precisa ser um objeto JSON ({ \"PLACEHOLDER\": \"valor\", ... }).", 2);
+  fail("Config precisa ser um objeto JSON ({ \"PLACEHOLDER\": \"value\", ... }).", 2);
 }
 
 const missing = [...placeholders].filter((p) => !(p in config)).sort();
 if (missing.length > 0) {
-  falhar(
+  fail(
     `Incomplete config: the template needs ${placeholders.size} placeholder(s), and ${missing.length} are missing:
 ` +
     missing.map((p) => `  - ${p}`).join("\n"),
@@ -99,24 +99,24 @@ if (missing.length > 0) {
 
 // Os valores entram dentro de strings JS com aspas duplas no kit; caracteres
 // dangerous characters would break the injected script, or open an escape.
-const invalidos = [];
+const invalid = [];
 for (const p of placeholders) {
   const v = config[p];
   if (typeof v !== "string" || v.trim() === "") {
-    invalidos.push(`${p}: must be a non-empty string`);
+    invalid.push(`${p}: must be a non-empty string`);
     continue;
   }
-  if (/["\\\n\r]/.test(v)) invalidos.push(`${p}: cannot contain a double quote, backslash, or line break (it would break the kit script)`);
-  if (/<\/script/i.test(v)) invalidos.push(`${p}: cannot contain "</script" (it would close the kit block early)`);
+  if (/["\\\n\r]/.test(v)) invalid.push(`${p}: cannot contain a double quote, backslash, or line break (it would break the kit script)`);
+  if (/<\/script/i.test(v)) invalid.push(`${p}: cannot contain "</script" (it would close the kit block early)`);
 }
-if (invalidos.length > 0) {
-  falhar(`Config has invalid value(s):
-` + invalidos.map((x) => `  - ${x}`).join("\n"), 2);
+if (invalid.length > 0) {
+  fail(`Config has invalid value(s):
+` + invalid.map((x) => `  - ${x}`).join("\n"), 2);
 }
 
-const sobrandoNoConfig = Object.keys(config).filter((k) => !placeholders.has(k)).sort();
-if (sobrandoNoConfig.length > 0) {
-  avisar(`Keys in the config the template never uses (ignored): ${sobrandoNoConfig.join(", ")}`);
+const unusedInConfig = Object.keys(config).filter((k) => !placeholders.has(k)).sort();
+if (unusedInConfig.length > 0) {
+  warn(`Keys in the config the template never uses (ignored): ${unusedInConfig.join(", ")}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -125,7 +125,7 @@ if (sobrandoNoConfig.length > 0) {
 const html = readFileSync(targetPath, "utf8");
 
 if (html.includes("REVIEW KIT")) {
-  falhar(
+  fail(
     'The target already contains "REVIEW KIT"; not injecting again. To re-inject, ' +
     "To re-inject, restore the .pre-kit.html backup or remove the current block first.",
     3
@@ -136,67 +136,67 @@ if (html.includes("REVIEW KIT")) {
 // string appears earlier inside some script.
 const idxBody = html.toLowerCase().lastIndexOf("</body>");
 if (idxBody === -1) {
-  falhar("The target has no </body>, so there is nowhere to inject the kit.", 4);
+  fail("The target has no </body>, so there is nowhere to inject the kit.", 4);
 }
 
 // ---------------------------------------------------------------------------
 // 5. Backup antes de mexer
 // ---------------------------------------------------------------------------
-const baseBackup = targetPath.replace(/\.html?$/i, "");
-let caminhoBackup = `${baseBackup}.pre-kit.html`;
-if (existsSync(caminhoBackup)) {
+const backupBase = targetPath.replace(/\.html?$/i, "");
+let backupPath = `${backupBase}.pre-kit.html`;
+if (existsSync(backupPath)) {
   // Never overwrite an existing backup silently: fall back to a timestamped name
   const ts = new Date().toISOString().replace(/[:T]/g, "-").slice(0, 19);
-  caminhoBackup = `${baseBackup}.pre-kit-${ts}.html`;
-  avisar(`The default backup already existed, so this one goes to: ${caminhoBackup}`);
+  backupPath = `${backupBase}.pre-kit-${ts}.html`;
+  warn(`The default backup already existed, so this one goes to: ${backupPath}`);
 }
-copyFileSync(targetPath, caminhoBackup);
+copyFileSync(targetPath, backupPath);
 
 // ---------------------------------------------------------------------------
 // 6. Substitute placeholders and confirm none survived
 // ---------------------------------------------------------------------------
-let bloco = template;
+let block = template;
 for (const p of placeholders) {
-  bloco = bloco.split(`{{${p}}}`).join(config[p]);
+  block = block.split(`{{${p}}}`).join(config[p]);
 }
 
 // The dictionaries are embedded rather than fetched, so the reviewed page needs
 // no extra request and keeps working offline and from a file:// path. The marker
 // is a comment rather than a brace-delimited name, so it survives step 6
 // untouched and the config never has to carry a value it did not write.
-if (bloco.includes(MARCADOR_I18N)) {
-  let idiomas;
+if (block.includes(I18N_MARKER)) {
+  let languages;
   try {
-    idiomas = carregarIdiomas();
+    languages = loadLanguages();
   } catch (e) {
-    falhar(`Could not load the languages: ${e.message}`, 2);
+    fail(`Could not load the languages: ${e.message}`, 2);
   }
-  const coverage = conferirCobertura(idiomas);
-  for (const [codigo, info] of Object.entries(coverage)) {
+  const coverage = checkCoverage(languages);
+  for (const [code, info] of Object.entries(coverage)) {
     if (info.coverage < 1) {
-      avisar(`${codigo} is ${Math.round(info.coverage * 100)}% translated; the rest falls back to English`);
+      warn(`${code} is ${Math.round(info.coverage * 100)}% translated; the rest falls back to English`);
     }
   }
-  bloco = bloco.split(MARCADOR_I18N).join(serializarParaKit(idiomas));
-  const codigos = Object.keys(idiomas).sort().join(", ");
-  avisar(`Languages embedded in the kit: ${codigos}. The reviewer's browser picks one; anything else gets English.`);
+  block = block.split(I18N_MARKER).join(serializeForPage(languages));
+  const codes = Object.keys(languages).sort().join(", ");
+  warn(`Languages embedded in the kit: ${codes}. The reviewer's browser picks one; anything else gets English.`);
 } else {
-  avisar("The template has no language marker. The kit will show the English text baked into it.");
+  warn("The template has no language marker. The kit will show the English text baked into it.");
 }
 
 // Safety net: if ANYTHING placeholder-shaped survived, stop rather than ship
 // (including odd forms like {{ WITH SPACES }}), abort rather than ship it.
-const sobras = bloco.match(/\{\{[^}]*\}\}/g);
-if (sobras) {
-  falhar(`A placeholder survived substitution in the final block: ${[...new Set(sobras)].join(", ")}`, 2);
+const leftovers = block.match(/\{\{[^}]*\}\}/g);
+if (leftovers) {
+  fail(`A placeholder survived substitution in the final block: ${[...new Set(leftovers)].join(", ")}`, 2);
 }
 
 // Kit invariants (a light check; the real gate is Phase 2 of the skill):
-if (!/@media\s+print/i.test(bloco)) {
-  avisar("INVARIANT: the block has no print rules. The kit must disappear when printing. Check the template.");
+if (!/@media\s+print/i.test(block)) {
+  warn("INVARIANT: the block has no print rules. The kit must disappear when printing. Check the template.");
 }
-if (!bloco.includes("REVIEW_MODE")) {
-  avisar("The block has no REVIEW_MODE switch. Check the template.");
+if (!block.includes("REVIEW_MODE")) {
+  warn("The block has no REVIEW_MODE switch. Check the template.");
 }
 
 // ---------------------------------------------------------------------------
@@ -211,42 +211,42 @@ if (!bloco.includes("REVIEW_MODE")) {
  * If the sections cannot be established confidently, this aborts. Injecting the
  * kit without a manifest would leave a page that collects feedback and a gate
  * with no boundary to enforce, which is the worst of both. */
-const marcado = buildManifest(html, config.SECTION_SELECTOR, {
+const marked = buildManifest(html, config.SECTION_SELECTOR, {
   material: config.MATERIAL || "",
   project: config.PROJECT || "",
 });
-if (!marcado.ok) {
-  falhar(
+if (!marked.ok) {
+  fail(
     "Could not establish the reviewable sections, so nothing was written.\n" +
-    "  " + marcado.why + "\n" +
+    "  " + marked.why + "\n" +
     "  The gate needs a list of sections it can trust. Without one it would have\n" +
     "  no boundary to enforce, and a gate with no boundary guarantees nothing.",
     2
   );
 }
-const htmlMarcado = marcado.html;
-const idxBodyMarcado = htmlMarcado.lastIndexOf("</body>");
+const markedHtml = marked.html;
+const markedBodyIndex = markedHtml.lastIndexOf("</body>");
 
-const separadorFinal = bloco.endsWith("\n") ? "" : "\n";
-const resultado = htmlMarcado.slice(0, idxBodyMarcado) + bloco + separadorFinal +
-  htmlMarcado.slice(idxBodyMarcado);
+const finalSeparator = block.endsWith("\n") ? "" : "\n";
+const result = markedHtml.slice(0, markedBodyIndex) + block + finalSeparator +
+  markedHtml.slice(markedBodyIndex);
 
 const tmp = `${targetPath}.tmp-kit`;
-writeFileSync(tmp, resultado, "utf8");
+writeFileSync(tmp, result, "utf8");
 renameSync(tmp, targetPath); // atomic: the target is either fully old or fully new
 
-const caminhoManifesto = targetPath.replace(/\.html?$/i, "") + ".sections.json";
-writeFileSync(caminhoManifesto, JSON.stringify(marcado.manifest, null, 2), "utf8");
+const manifestPath = targetPath.replace(/\.html?$/i, "") + ".sections.json";
+writeFileSync(manifestPath, JSON.stringify(marked.manifest, null, 2), "utf8");
 
 // ---------------------------------------------------------------------------
 // 8. Report
 // ---------------------------------------------------------------------------
-const nomes = [...placeholders].sort();
+const names = [...placeholders].sort();
 console.log("Review kit injected successfully.");
-console.log(`  Template : ${resolve(caminhoKit)}`);
+console.log(`  Template : ${resolve(kitPath)}`);
 console.log(`  Target   : ${resolve(targetPath)}`);
-console.log(`  Backup   : ${resolve(caminhoBackup)}`);
-console.log(`  Placeholders replaced (${nomes.length}): ${nomes.join(", ")}`);
-console.log(`  Block of ${bloco.split("\n").length} lines injected right before </body>.`);
-console.log(`  Sections marked (${marcado.manifest.sections.length}): ${caminhoManifesto}`);
+console.log(`  Backup   : ${resolve(backupPath)}`);
+console.log(`  Placeholders replaced (${names.length}): ${names.join(", ")}`);
+console.log(`  Block of ${block.split("\n").length} lines injected right before </body>.`);
+console.log(`  Sections marked (${marked.manifest.sections.length}): ${manifestPath}`);
 console.log("  Next: serve the target over local HTTP and check the three invariants.");

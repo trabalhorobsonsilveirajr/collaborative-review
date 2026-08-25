@@ -87,10 +87,10 @@ if ($dirLog -and -not (Test-Path -LiteralPath $dirLog)) {
 }
 
 function Write-Log {
-  param([string]$Nivel, [string]$Mensagem)
+  param([string]$Nivel, [string]$Message)
   # Machine local time; Get-Date already returns it.
   $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-  Add-Content -LiteralPath $LogPath -Value "[$ts BRT] [$Nivel] $Mensagem" -Encoding utf8
+  Add-Content -LiteralPath $LogPath -Value "[$ts BRT] [$Nivel] $Message" -Encoding utf8
 }
 
 # Defensive property read: rows coming from the backend function or from the
@@ -116,12 +116,12 @@ function Read-Prop {
 # but carries no socket inner, so without this a wrong password would retry 3 times.
 function Invoke-WithNetworkRetry {
   param(
-    [Parameter(Mandatory)][scriptblock]$Acao,
+    [Parameter(Mandatory)][scriptblock]$Action,
     [int]$Tentativas = 3,
     [int]$EsperaSeg = 8
   )
   for ($i = 1; $i -le $Tentativas; $i++) {
-    try { return & $Acao }
+    try { return & $Action }
     catch {
       $ehRede = $_.Exception.InnerException -is [System.Net.Sockets.SocketException]
       if (-not $ehRede -or $i -eq $Tentativas) { throw }
@@ -196,7 +196,7 @@ try {
     }
   }
 
-  $senha = (Get-Content -LiteralPath $PasswordPath -Raw).Trim()
+  $password = (Get-Content -LiteralPath $PasswordPath -Raw).Trim()
 
   # ---------------------------------------------------------------------------
   # Walk the registered materials
@@ -218,35 +218,35 @@ try {
       #           old = stale (remove it with a warning and carry on)
       # -----------------------------------------------------------------------
       if (Test-Path -LiteralPath $lock) {
-        $idadeMin = ((Get-Date) - (Get-Item -LiteralPath $lock).LastWriteTime).TotalMinutes
+        $ageMinutes = ((Get-Date) - (Get-Item -LiteralPath $lock).LastWriteTime).TotalMinutes
         # A LIVE lock process means the engine is working, however old the lock is: skip.
-        # PID MORTO = crash confirmado: destrava ja, sem esperar staleness
+        # PID MORTO = crash confirmed: destrava ja, sem esperar staleness
         # (bug real 10/07/2026: ExecutionTimeLimit de 1h matava motor legitimo
-        # e o material ficava 60 min travado ate o lock "envelhecer").
-        $pidVivo = $false
+        # e o material ficava 60 min locked ate o lock "envelhecer").
+        $pidAlive = $false
         try {
           $lockPid = (Get-Content -LiteralPath $lock -Raw | ConvertFrom-Json).pid
-          if ($lockPid -and (Get-Process -Id $lockPid -ErrorAction SilentlyContinue)) { $pidVivo = $true }
+          if ($lockPid -and (Get-Process -Id $lockPid -ErrorAction SilentlyContinue)) { $pidAlive = $true }
         } catch {}
-        if ($pidVivo) { continue }
-        if ($pidVivo -eq $false -and $idadeMin -lt 2) { continue } # just created: leave room for the process to start
-        if ($pidVivo -eq $false -and $idadeMin -ge 2) {
-          Write-Log 'WARN' "Lock process is dead (age $([math]::Round($idadeMin)) min) - releasing without waiting for the staleness window."
-        } elseif ($idadeMin -lt $LockStaleMin) { continue }
+        if ($pidAlive) { continue }
+        if ($pidAlive -eq $false -and $ageMinutes -lt 2) { continue } # just created: leave room for the process to start
+        if ($pidAlive -eq $false -and $ageMinutes -ge 2) {
+          Write-Log 'WARN' "Lock process is dead (age $([math]::Round($ageMinutes)) min) - releasing without waiting for the staleness window."
+        } elseif ($ageMinutes -lt $LockStaleMin) { continue }
         # Antes de remover o lock velho, DESTRAVA tambem o ledger: run morta por
         # a hard kill leaves the last status as processing, which reads as in-flight
         # - without the error line, that conclusion would never be retried
-        # (furo real encontrado no teste ponta a ponta de 08/07/2026).
+        # (furo real found no teste ponta a ponta de 08/07/2026).
         $lockInfo = $null
         try { $lockInfo = Get-Content -LiteralPath $lock -Raw | ConvertFrom-Json } catch {}
         $idCrash = if ($lockInfo) { Read-Prop $lockInfo 'conclusion_id' } else { $null }
         Remove-Item -LiteralPath $lock -Force
-        Write-Log 'WARN' "Stale lock ($([math]::Round($idadeMin)) min) removed at $lock. Most likely a previous run crashed."
+        Write-Log 'WARN' "Stale lock ($([math]::Round($ageMinutes)) min) removed at $lock. Most likely a previous run crashed."
         if ($null -ne $idCrash) {
           $ledgerCrash = Join-Path $orq 'ledger.jsonl'
           @{
             conclusion_id = $idCrash; project = $m.project; material = $m.material
-            status = 'error'; erro = "lock stale ($([math]::Round($idadeMin)) min) - crash presumido; retry"
+            status = 'error'; error = "lock stale ($([math]::Round($ageMinutes)) min) - crash assumed; retry"
             ts = (Get-Date -Format o)
           } | ConvertTo-Json -Compress | Add-Content -LiteralPath $ledgerCrash -Encoding utf8
           Write-Log 'WARN' "Conclusion #$idCrash released in the ledger (error status). Eligible for retry."
@@ -260,8 +260,8 @@ try {
       # -----------------------------------------------------------------------
       if (Get-Command Sync-Approvals -ErrorAction SilentlyContinue) {
         try {
-          $aprovacoesUrl = $EdgeFnUrl -replace 'read-feedback', 'approvals'
-          $sync = Sync-Approvals -ApprovalsUrl $aprovacoesUrl -Password $senha `
+          $approvalsUrl = $EdgeFnUrl -replace 'read-feedback', 'approvals'
+          $sync = Sync-Approvals -ApprovalsUrl $approvalsUrl -Password $password `
             -Project $m.project -Material $m.material -OrqDir $orq `
             -Log ${function:Write-Log}
           if ($sync.downloaded -gt 0) {
@@ -279,13 +279,13 @@ try {
       #      The engine marks it applied on completion, so a gate that fails
       #      stays eligible and retries on the next tick.
       # -----------------------------------------------------------------------
-      $dirGates     = Join-Path $orq 'structural-gate'
-      $gateAprovado = $null
-      if (Test-Path -LiteralPath $dirGates) {
+      $gatesDir     = Join-Path $orq 'structural-gate'
+      $approvedGate = $null
+      if (Test-Path -LiteralPath $gatesDir) {
         # Oldest first (the name carries reviewer and timestamp as a stable tiebreak)
-        $candidatos = @(Get-ChildItem -LiteralPath $dirGates -Filter '*.md' -File -ErrorAction SilentlyContinue |
+        $candidates = @(Get-ChildItem -LiteralPath $gatesDir -Filter '*.md' -File -ErrorAction SilentlyContinue |
           Sort-Object CreationTime, Name)
-        foreach ($g in $candidatos) {
+        foreach ($g in $candidates) {
           $conteudo = Get-Content -LiteralPath $g.FullName -Raw -ErrorAction SilentlyContinue
           if ([string]::IsNullOrWhiteSpace($conteudo)) { continue }
           # Front matter: the block between the first two '---' at the top of the file
@@ -293,24 +293,24 @@ try {
           $fm       = $Matches[1]
           # A space/tab class on purpose: a generic whitespace class matches newlines
           # an EMPTY applied-at field swallow the next line and look filled in.
-          $aprovado = $fm -match '(?im)^[ \t]*status[ \t]*:[ \t]*["'']?approved["'']?[ \t]*\r?$'
-          $aplicado = $fm -match '(?im)^[ \t]*applied_at[ \t]*:[ \t]*\S'
-          if ($aprovado -and -not $aplicado) { $gateAprovado = $g; break }
+          $approved = $fm -match '(?im)^[ \t]*status[ \t]*:[ \t]*["'']?approved["'']?[ \t]*\r?$'
+          $applied = $fm -match '(?im)^[ \t]*applied_at[ \t]*:[ \t]*\S'
+          if ($approved -and -not $applied) { $approvedGate = $g; break }
         }
       }
 
-      if ($gateAprovado) {
+      if ($approvedGate) {
         # Same mechanism as a conclusion: lock, headless run, safety net.
         New-Item -ItemType Directory -Path $orq -Force | Out-Null
-        $agora = Get-Date -Format o
-        @{ pid = $PID; gate = $gateAprovado.FullName; created_at = $agora } | ConvertTo-Json -Compress |
+        $now = Get-Date -Format o
+        @{ pid = $PID; gate = $approvedGate.FullName; created_at = $now } | ConvertTo-Json -Compress |
           Set-Content -LiteralPath $lock -Encoding utf8
 
         try {
           $ledger   = Join-Path $orq 'ledger.jsonl'
           $contexto = [ordered]@{
             modo            = 'structural-approved'
-            gatePath        = $gateAprovado.FullName
+            gatePath        = $approvedGate.FullName
             project         = $m.project
             material        = $m.material
             projectFolder    = $m.projectFolder
@@ -333,25 +333,25 @@ try {
           $prompt = "You are the collaborative-review correction engine. MODE: structural-approved. Read the protocol at '$ProtocolPath' and follow that mode's section EXACTLY: apply ONLY the approved gate named in the context, re-reading the CURRENT state of the file and reconciling with what was already applied, and when finished fill in the 'applied_at:' field in the gate front matter. The context for this run, including the gate path, is in the file '$ctxFile' - read it BEFORE you start."
 
           $runLog = Join-Path $orq ("claude-run-gate-" + (Get-Date -Format 'yyyyMMdd-HHmmss') + ".log")
-          Write-Log 'INFO' "APPROVED structural gate '$($gateAprovado.Name)' in $($m.project)/$($m.material). Invoking the engine in structural-approved mode (output: $runLog)."
+          Write-Log 'INFO' "APPROVED structural gate '$($approvedGate.Name)' in $($m.project)/$($m.material). Invoking the engine in structural-approved mode (output: $runLog)."
 
           & claude -p $prompt --allowedTools $AllowedTools *>> $runLog
-          $codigo = $LASTEXITCODE
+          $code = $LASTEXITCODE
 
-          if ($codigo -eq 0) {
+          if ($code -eq 0) {
             # Marking it applied is the ENGINE's job; if it did not, the gate
             # becomes eligible again on the next tick (retry).
-            Write-Log 'INFO' "claude -p finished OK for gate '$($gateAprovado.Name)'."
+            Write-Log 'INFO' "claude -p finished OK for gate '$($approvedGate.Name)'."
           }
           else {
-            # Fonte da verdade = o proprio gate (applied_at), nao o exit code
+            # Fonte da truth = o proprio gate (applied_at), nao o exit code
             # (a headless run can exit non-zero even after finishing successfully).
-            $gateDepois = Get-Content -LiteralPath $gateAprovado.FullName -Raw -ErrorAction SilentlyContinue
+            $gateDepois = Get-Content -LiteralPath $approvedGate.FullName -Raw -ErrorAction SilentlyContinue
             if ($gateDepois -match '(?m)^applied_at:[ 	]*\S') {
-              Write-Log 'WARN' "The engine exited with code $codigo, BUT the gate is marked applied. It finished; ignoring the exit code."
+              Write-Log 'WARN' "The engine exited with code $code, BUT the gate is marked applied. It finished; ignoring the exit code."
             }
             else {
-              Write-Log 'ERROR' "The engine exited with code $codigo for that gate. The gate stays eligible and will be retried next tick."
+              Write-Log 'ERROR' "The engine exited with code $code for that gate. The gate stays eligible and will be retried next tick."
             }
           }
         }
@@ -367,19 +367,19 @@ try {
       # -----------------------------------------------------------------------
       # (c) New conclusions: server function (filtered by scope) versus the ledger
       # -----------------------------------------------------------------------
-      $corpo = @{ password = $senha; project = $m.project; material = $m.material } | ConvertTo-Json -Compress
+      $body = @{ password = $password; project = $m.project; material = $m.material } | ConvertTo-Json -Compress
       $resposta = Invoke-WithNetworkRetry {
-        Invoke-RestMethod -Uri $EdgeFnUrl -Method Post -ContentType 'application/json' -Body $corpo -TimeoutSec 60
+        Invoke-RestMethod -Uri $EdgeFnUrl -Method Post -ContentType 'application/json' -Body $body -TimeoutSec 60
       }
 
-      $linhas = if ($resposta -is [System.Array]) { $resposta }
+      $lines = if ($resposta -is [System.Array]) { $resposta }
                 elseif ($null -ne (Read-Prop $resposta 'feedbacks')) { @($resposta.feedbacks) }
                 else { @() }
 
-      $conclusoes = @($linhas | Where-Object {
+      $conclusions = @($lines | Where-Object {
         ((Read-Prop $_ 'type') -eq 'conclusion') -and ($null -ne (Read-Prop $_ 'id'))
       })
-      if ($conclusoes.Count -eq 0) { continue }   # nothing to do: stay silent
+      if ($conclusions.Count -eq 0) { continue }   # nothing to do: stay silent
 
       # Local ledger: append-only journal; the LAST line for each id wins.
       $ledger = Join-Path $orq 'ledger.jsonl'
@@ -393,7 +393,7 @@ try {
         }
       }
 
-      $novas = @($conclusoes |
+      $novas = @($conclusions |
         Where-Object { $statusPorId["$(Read-Prop $_ 'id')"] -notin $StatusEmCurso } |
         Sort-Object { [string](Read-Prop $_ 'created_at') })
       if ($novas.Count -eq 0) { continue }        # all handled already: stay silent
@@ -401,25 +401,25 @@ try {
       # -----------------------------------------------------------------------
       # (d) Process ONLY the oldest. Lock, ledger, headless run
       # -----------------------------------------------------------------------
-      $alvo    = $novas[0]
-      $idAlvo  = Read-Prop $alvo 'id'
-      $revisor = [string](Read-Prop $alvo 'reviewer_name')
+      $target    = $novas[0]
+      $idAlvo  = Read-Prop $target 'id'
+      $reviewer = [string](Read-Prop $target 'reviewer_name')
 
       New-Item -ItemType Directory -Path $orq -Force | Out-Null
-      $agora = Get-Date -Format o
-      @{ pid = $PID; conclusion_id = $idAlvo; created_at = $agora } | ConvertTo-Json -Compress |
+      $now = Get-Date -Format o
+      @{ pid = $PID; conclusion_id = $idAlvo; created_at = $now } | ConvertTo-Json -Compress |
         Set-Content -LiteralPath $lock -Encoding utf8
 
       try {
         @{
-          conclusion_id = $idAlvo; revisor = $revisor
+          conclusion_id = $idAlvo; reviewer = $reviewer
           project = $m.project; material = $m.material
-          status = 'pending'; ts = $agora
+          status = 'pending'; ts = $now
         } | ConvertTo-Json -Compress | Add-Content -LiteralPath $ledger -Encoding utf8
 
         $contexto = [ordered]@{
           conclusion_id    = $idAlvo
-          revisor         = $revisor
+          reviewer         = $reviewer
           project         = $m.project
           material        = $m.material
           projectFolder    = $m.projectFolder
@@ -442,23 +442,23 @@ try {
         $prompt = "You are the collaborative-review correction engine. Read the protocol at '$ProtocolPath' and follow its 11 steps EXACTLY. The context for this run is in the file '$ctxFile' - read it BEFORE you start."
 
         $runLog = Join-Path $orq ("claude-run-" + (Get-Date -Format 'yyyyMMdd-HHmmss') + ".log")
-        Write-Log 'INFO' "New conclusion #$idAlvo from '$revisor' in $($m.project)/$($m.material). Invoking the engine (output: $runLog)."
+        Write-Log 'INFO' "New conclusion #$idAlvo from '$reviewer' in $($m.project)/$($m.material). Invoking the engine (output: $runLog)."
 
         # SYNCHRONOUS call: the watcher waits. What cuts a hang is the scheduled
         # task's own execution time limit, backed by the lock going stale on a
         # later tick. --allowedTools carries the pre-approved list; without it a
         # headless run hangs on a permission prompt nobody will ever answer.
         & claude -p $prompt --allowedTools $AllowedTools *>> $runLog
-        $codigo = $LASTEXITCODE
+        $code = $LASTEXITCODE
 
-        if ($codigo -eq 0) {
+        if ($code -eq 0) {
           # Status final ('applied', 'awaiting-structural-approval' etc.)
           # is the ENGINE's job; it writes to the ledger as it works.
           Write-Log 'INFO' "The engine finished successfully for conclusion #$idAlvo."
         }
         else {
           # Before recording an error, check the LEDGER: the engine writes its status
-          # final durante os 11 passos, e o codigo de saida do claude pode vir
+          # final durante os 11 passos, e o code de output do claude pode vir
           # exit 1 EVEN when the run finished completely (real case, 08/07/2026:
           # status 'applied' at 21:53, exit 1 at 21:56 - which would have become an
           # endless retry, once per tick). The ledger is the source of truth here;
@@ -470,14 +470,14 @@ try {
             if ($ultimaLinha) { $ultimoStatus = (ConvertFrom-Json $ultimaLinha).status }
           } catch {}
           if ($ultimoStatus -in @('applied', 'awaiting-structural-approval')) {
-            Write-Log 'WARN' "The engine exited with code $codigo, BUT the ledger shows it completed. Ignoring the exit code."
+            Write-Log 'WARN' "The engine exited with code $code, BUT the ledger shows it completed. Ignoring the exit code."
           }
           else {
-            Write-Log 'ERROR' "The engine exited with code $codigo for conclusion #$idAlvo. An error line was written to the ledger; it will be retried next tick."
+            Write-Log 'ERROR' "The engine exited with code $code for conclusion #$idAlvo. An error line was written to the ledger; it will be retried next tick."
             @{
-              conclusion_id = $idAlvo; revisor = $revisor
+              conclusion_id = $idAlvo; reviewer = $reviewer
               project = $m.project; material = $m.material
-              status = 'error'; erro = "claude -p exit $codigo"; ts = (Get-Date -Format o)
+              status = 'error'; error = "claude -p exit $code"; ts = (Get-Date -Format o)
             } | ConvertTo-Json -Compress | Add-Content -LiteralPath $ledger -Encoding utf8
           }
         }

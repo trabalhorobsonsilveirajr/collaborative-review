@@ -510,6 +510,17 @@ if (idFindings.length) {
   for (const f of idFindings) byFile.set(f.rel, (byFile.get(f.rel) || 0) + 1);
   console.log("ADVISORY - Portuguese identifiers (not user-visible, does not block): " + idFindings.length);
   for (const [rel, n] of byFile) console.log("  " + rel + ": " + n);
+  /* A count with nothing to act on is a number people learn to scroll past.
+   * --advisory prints the actual lines, so the list can be worked through. */
+  if (process.argv.includes("--advisory")) {
+    console.log("");
+    for (const f of idFindings) {
+      console.log(`  ${f.rel}:${f.line}  [${f.words.join(", ")}]`);
+      console.log(`      ${f.excerpt}`);
+    }
+  } else {
+    console.log("  (run with --advisory to see the lines)");
+  }
   console.log("");
 }
 

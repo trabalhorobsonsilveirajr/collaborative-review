@@ -11,7 +11,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 //
 // Contract, a single POST with the action in the body:
 //   { password, action: "record", approvals: [...] }   (1 to 50 per call)
-//   { password, action: "list",  projeto?, material?, pending_only? }  (read)
+//   { password, action: "list",  project?, material?, pending_only? }  (read)
 //   { password, action: "mark",  ids: [...] }            (1 to 100 per call)
 //
 // Returns 400 on validation, 401 on a wrong password, 500 on configuration.
@@ -30,8 +30,8 @@ const cors = {
 
 const GATE_ARQUIVO_RE = /^[a-z0-9][a-z0-9-]*\.md$/;
 
-function resposta(status: number, corpo: unknown): Response {
-  return new Response(JSON.stringify(corpo), {
+function resposta(status: number, responseBody: unknown): Response {
+  return new Response(JSON.stringify(responseBody), {
     status,
     headers: { ...cors, "Content-Type": "application/json" },
   });
@@ -82,43 +82,43 @@ Deno.serve(async (req: Request) => {
       const linhas: Record<string, unknown>[] = [];
       for (let i = 0; i < lista.length; i++) {
         const a = lista[i] as Record<string, unknown>;
-        const erros: string[] = [];
+        const errors: string[] = [];
         const project = typeof a.project === "string" ? a.project.trim() : "";
         const material = typeof a.material === "string" ? a.material.trim() : "";
         const gate = typeof a.gate_file === "string" ? a.gate_file.trim() : "";
         const item = a.item_number;
         const verdict = a.verdict;
-        const editado = a.edited_request;
+        const wasEdited = a.edited_request;
         const decisaoId = a.decision_id;
 
-        if (project.length < 1 || project.length > 80) erros.push("project: 1 a 80");
-        if (material.length < 1 || material.length > 80) erros.push("material: 1 a 80");
+        if (project.length < 1 || project.length > 80) errors.push("project: 1 a 80");
+        if (material.length < 1 || material.length > 80) errors.push("material: 1 a 80");
         if (!GATE_ARQUIVO_RE.test(gate) || gate.length > 120) {
-          erros.push("gate_file: must be a bare file name matching [a-z0-9-].md");
+          errors.push("gate_file: must be a bare file name matching [a-z0-9-].md");
         }
         if (!Number.isInteger(item) || (item as number) < 1 || (item as number) > 99) {
-          erros.push("item_number: inteiro 1 a 99");
+          errors.push("item_number: inteiro 1 a 99");
         }
         if (verdict !== "approved" && verdict !== "rejected") {
-          erros.push("verdict: 'approved' ou 'rejected'");
+          errors.push("verdict: 'approved' ou 'rejected'");
         }
-        if (editado !== undefined && editado !== null &&
-          (typeof editado !== "string" || editado.length > 5000)) {
-          erros.push("edited_request: texto ate 5000");
+        if (wasEdited !== undefined && wasEdited !== null &&
+          (typeof wasEdited !== "string" || wasEdited.length > 5000)) {
+          errors.push("edited_request: text ate 5000");
         }
         if (decisaoId !== undefined && decisaoId !== null && !Number.isInteger(decisaoId)) {
-          erros.push("decision_id: must be an integer");
+          errors.push("decision_id: must be an integer");
         }
-        if (erros.length > 0) {
-          return resposta(400, { error_message: `item ${i + 1}: ` + erros.join("; ") });
+        if (errors.length > 0) {
+          return resposta(400, { error_message: `item ${i + 1}: ` + errors.join("; ") });
         }
         linhas.push({
           project, material,
           gate_file: gate,
           item_number: item,
           verdict,
-          edited_request: typeof editado === "string" && editado.trim().length > 0
-            ? editado.trim() : null,
+          edited_request: typeof wasEdited === "string" && wasEdited.trim().length > 0
+            ? wasEdited.trim() : null,
           decision_id: decisaoId ?? null,
         });
       }
