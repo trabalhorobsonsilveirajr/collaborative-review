@@ -460,6 +460,40 @@ const idFindings = [];
  * JSON below, and check-i18n.mjs holds them to their own separate contract. */
 const EH_ARQUIVO_DE_IDIOMA = (rel) => /(^|[\\/])assets[\\/]i18n[\\/][^\\/]+\.json$/.test(rel);
 
+/* An English document that QUOTES a Portuguese string is still an English
+ * document. CONTRIBUTING.md explains a real defect by showing the exact text
+ * that slipped through ("Terminou de revisar?"), and that quote is the evidence
+ * for the paragraph around it - removing it would weaken the very lesson the
+ * page is teaching.
+ *
+ * So in prose files only, and only inside "double quotes", foreign text is read
+ * as a citation rather than as the author writing in the wrong language.
+ * Deliberately narrow: prose OUTSIDE the quotes is still checked normally, so a
+ * document actually written in Portuguese is still caught. Code files get no
+ * such pass, because a quoted string there is usually a label on a button. */
+const EH_PROSA = (rel) => /\.(md|txt)$/i.test(rel);
+function foraDasAspas(linha) {
+  return linha.replace(/"[^"\n]*"/g, " ").replace(/`[^`\n]*`/g, " ");
+}
+
+{
+  /* Both directions, or this is just a hole with a comment over it. */
+  const CITACAO = 'it reported clean while the page still said "Terminou de revisar?" in the footer';
+  const ESCRITO_EM_PORTUGUES = "Este documento explica como a ferramenta funciona quando voce roda";
+  const problemas = [];
+  if (matchWords(foraDasAspas(CITACAO)).length !== 0) {
+    problemas.push("a quoted example should not be flagged in prose");
+  }
+  if (matchWords(foraDasAspas(ESCRITO_EM_PORTUGUES)).length === 0) {
+    problemas.push("prose actually written in Portuguese must still be flagged");
+  }
+  if (problemas.length) {
+    console.error("check-artifacts self-test FAILED (citation rule), refusing to run:");
+    for (const p of problemas) console.error("  - " + p);
+    process.exit(3);
+  }
+}
+
 for (const rel of files) {
   const abs = join(ROOT, rel);
   let text;
@@ -469,9 +503,10 @@ for (const rel of files) {
   if (err) parseErrors.push({ rel, err });
 
   if (EH_ARQUIVO_DE_IDIOMA(rel)) continue;
+  const ehProsa = EH_PROSA(rel);
 
   text.split(/\r?\n/).forEach((line, i) => {
-    const words = ptHits(line);
+    const words = ptHits(ehProsa ? foraDasAspas(line) : line);
     if (words.length) ptFindings.push({ rel, line: i + 1, words, excerpt: line.trim().slice(0, 80) });
     else {
       const ids = ptIdentifiers(line);
