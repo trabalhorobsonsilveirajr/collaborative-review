@@ -87,12 +87,12 @@ if (typeof config !== "object" || config === null || Array.isArray(config)) {
   falhar("Config precisa ser um objeto JSON ({ \"PLACEHOLDER\": \"valor\", ... }).", 2);
 }
 
-const faltando = [...placeholders].filter((p) => !(p in config)).sort();
-if (faltando.length > 0) {
+const missing = [...placeholders].filter((p) => !(p in config)).sort();
+if (missing.length > 0) {
   falhar(
-    `Incomplete config: the template needs ${placeholders.size} placeholder(s), and ${faltando.length} are missing:
+    `Incomplete config: the template needs ${placeholders.size} placeholder(s), and ${missing.length} are missing:
 ` +
-    faltando.map((p) => `  - ${p}`).join("\n"),
+    missing.map((p) => `  - ${p}`).join("\n"),
     2
   );
 }
@@ -171,10 +171,10 @@ if (bloco.includes(MARCADOR_I18N)) {
   } catch (e) {
     falhar(`Could not load the languages: ${e.message}`, 2);
   }
-  const cobertura = conferirCobertura(idiomas);
-  for (const [codigo, info] of Object.entries(cobertura)) {
-    if (info.cobertura < 1) {
-      avisar(`${codigo} is ${Math.round(info.cobertura * 100)}% translated; the rest falls back to English`);
+  const coverage = conferirCobertura(idiomas);
+  for (const [codigo, info] of Object.entries(coverage)) {
+    if (info.coverage < 1) {
+      avisar(`${codigo} is ${Math.round(info.coverage * 100)}% translated; the rest falls back to English`);
     }
   }
   bloco = bloco.split(MARCADOR_I18N).join(serializarParaKit(idiomas));

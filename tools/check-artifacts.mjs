@@ -453,6 +453,13 @@ const ptFindings = [];
 const suspFindings = [];
 const idFindings = [];
 
+/* The translation files are SUPPOSED to be full of Portuguese, Spanish and
+ * French: that is their entire content. Scanning them for "non-English text"
+ * would report every line of every translation, which is both wrong and the
+ * fastest way to teach someone to ignore this output. They are still parsed as
+ * JSON below, and check-i18n.mjs holds them to their own separate contract. */
+const EH_ARQUIVO_DE_IDIOMA = (rel) => /(^|[\\/])assets[\\/]i18n[\\/][^\\/]+\.json$/.test(rel);
+
 for (const rel of files) {
   const abs = join(ROOT, rel);
   let text;
@@ -460,6 +467,8 @@ for (const rel of files) {
 
   const err = parseFile(rel, abs, text);
   if (err) parseErrors.push({ rel, err });
+
+  if (EH_ARQUIVO_DE_IDIOMA(rel)) continue;
 
   text.split(/\r?\n/).forEach((line, i) => {
     const words = ptHits(line);

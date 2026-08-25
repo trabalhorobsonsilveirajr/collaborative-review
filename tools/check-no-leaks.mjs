@@ -221,11 +221,16 @@ function isSelf(label) {
 
 const findings = [];
 /* A name split across markup reads normally on screen and is invisible to a
- * plain text search: "proteu<span>auto</span>" renders as one word but matches
- * neither half of a pattern looking for the whole one. Every line is therefore
- * scanned TWICE - once as written, once with the tags stripped out. Found in
- * this repository's own dashboard, where a brand name had been sitting in plain
- * sight through several audits that all reported clean. */
+ * plain text search. A styled wordmark that renders as one word is often written
+ * as two pieces with a tag between them - think "Acme" split as "Ac<span>me</span>"
+ * - and a pattern looking for the whole name matches neither half. Every line is
+ * therefore scanned TWICE: once as written, once with the tags stripped out.
+ *
+ * Found in this repository's own dashboard, where a brand name sat in plain sight
+ * through several audits that all reported clean. The example above is invented on
+ * purpose: writing the real string here would put the very thing this file exists
+ * to keep out of the repository INTO the repository, in the file that is allowed
+ * to skip itself. */
 function semTags(linha) {
   return linha.replace(/<[^<>]{0,200}>/g, "");
 }

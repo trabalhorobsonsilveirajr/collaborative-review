@@ -61,12 +61,12 @@ export function conferirCobertura(idiomas) {
   const relatorio = {};
   for (const [codigo, dic] of Object.entries(idiomas)) {
     if (codigo === IDIOMA_BASE) continue;
-    const faltando = base.filter((k) => !(k in dic));
-    const sobrando = Object.keys(dic).filter((k) => !k.startsWith("_") && !base.includes(k));
+    const missing = base.filter((k) => !(k in dic));
+    const extra = Object.keys(dic).filter((k) => !k.startsWith("_") && !base.includes(k));
     relatorio[codigo] = {
-      faltando,
-      sobrando,
-      cobertura: base.length === 0 ? 1 : (base.length - faltando.length) / base.length,
+      missing,
+      extra,
+      coverage: base.length === 0 ? 1 : (base.length - missing.length) / base.length,
     };
   }
   return relatorio;
@@ -97,8 +97,8 @@ export function resolverIdioma(pedido, disponiveis) {
 
 /**
  * The one marker both templates carry. It is a COMMENT followed by an empty
- * dictionary, not a {{placeholder}}, for two reasons: placeholder substitution
- * must not touch it, and a template whose marker never gets replaced still
+ * dictionary rather than a brace-delimited name, for two reasons: placeholder
+ * substitution must not touch it, and a template whose marker never gets replaced still
  * parses and runs - it just falls back to the English written into the markup.
  */
 export const MARCADOR_I18N = '/*__I18N__*/{"en":{}}';
@@ -109,11 +109,11 @@ export const MARCADOR_I18N = '/*__I18N__*/{"en":{}}';
  * Returns the html unchanged, and says so, when there is no marker.
  */
 export function injetarIdiomas(html, idiomas = null) {
-  if (!html.includes(MARCADOR_I18N)) return { html, injetado: false, idiomas: [] };
+  if (!html.includes(MARCADOR_I18N)) return { html, injected: false, idiomas: [] };
   const dicionarios = idiomas || carregarIdiomas();
   return {
     html: html.split(MARCADOR_I18N).join(serializarParaKit(dicionarios)),
-    injetado: true,
+    injected: true,
     idiomas: Object.keys(dicionarios).sort(),
   };
 }
@@ -195,19 +195,19 @@ const CASOS = [
   // --- conferirCobertura: measuring, not judging ----------------------------
   ["a partial translation is measured, not rejected", () => {
     const r = conferirCobertura({ en: { a: "1", b: "2", c: "3" }, xx: { a: "1" } });
-    return Math.abs(r.xx.cobertura - 1 / 3) < 1e-9 && r.xx.faltando.join() === "b,c";
+    return Math.abs(r.xx.coverage - 1 / 3) < 1e-9 && r.xx.missing.join() === "b,c";
   }],
   ["a key that exists nowhere in the base is reported as extra", () => {
     const r = conferirCobertura({ en: { a: "1" }, xx: { a: "1", z: "9" } });
-    return r.xx.sobrando.join() === "z";
+    return r.xx.extra.join() === "z";
   }],
   ["_meta is not counted as a translatable key", () => {
     const r = conferirCobertura({ en: { _meta: {}, a: "1" }, xx: { a: "1" } });
-    return r.xx.cobertura === 1 && r.xx.sobrando.length === 0;
+    return r.xx.coverage === 1 && r.xx.extra.length === 0;
   }],
   ["the shipped languages are all complete", () => {
     const r = conferirCobertura(carregarIdiomas());
-    return Object.values(r).every((v) => v.cobertura === 1);
+    return Object.values(r).every((v) => v.coverage === 1);
   }],
 
   // --- serializarParaKit: safe to embed in a <script> -----------------------
