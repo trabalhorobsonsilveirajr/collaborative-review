@@ -202,5 +202,17 @@ MIT. See [LICENSE](LICENSE).
 
 ## Contributing
 
-Issues and pull requests are welcome. If you change anything in `scripts/gate.mjs`, the
-self-test must still pass, and new failure modes should get new cases in it.
+[CONTRIBUTING.md](CONTRIBUTING.md) has the full guide, including a plainly written list
+of what this project is missing and how big each gap is. The short version:
+
+* **Adding a language** is the smallest useful contribution and needs no knowledge of
+  the rest. Copy `en.json`, translate, open a pull request. Partial translations are
+  welcome: missing keys fall back to English on their own.
+* **A portable watcher** is the largest gap. The unattended correction loop is
+  Windows-only today.
+* **Reports from real use** are worth more than most patches. This has been used by one
+  person, which catches a certain kind of mistake and is blind to another.
+
+One rule runs through everything here: a check that has never failed has not been
+tested. Every verifier tests itself before it looks at your code, and refuses to run
+when its own detection is wrong. If you change one, prove it still goes red.
