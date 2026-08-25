@@ -1,0 +1,14 @@
+{
+  "_comment": "Example config for scripts/build-kit.mjs. Each key replaces the placeholder of the same name in assets/review-kit.tmpl.html. SUPABASE_ANON_KEY is public by design: it only identifies the project. The security policy is what protects the data, since the anonymous role can insert but never read.",
+  "_note_label": "SECTION_LABEL keeps a trailing space on purpose: the kit builds \"Step 1: Title\".",
+  "SUPABASE_URL": "https://YOUR_PROJECT_REF.supabase.co",
+  "SUPABASE_ANON_KEY": "YOUR_SUPABASE_ANON_KEY",
+  "PROJECT": "my-project",
+  "MATERIAL": "Onboarding Guide",
+  "SECTION_SELECTOR": ".step",
+  "SECTION_TITLE_SELECTOR": "h3",
+  "SECTION_BODY_SELECTOR": ".step-body",
+  "NAME_BAR_ANCHOR": ".topbar",
+  "SECTION_LABEL": "Passo ",
+  "BUCKET_AUDIO": "audios-feedback"
+}

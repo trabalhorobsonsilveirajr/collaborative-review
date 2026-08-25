@@ -1,0 +1,14 @@
+{
+  "name": "collaborative-review",
+  "description": "Tools for collecting structured feedback on web pages and applying it safely: a per-section review kit for non-technical reviewers, and a quality gate that refuses any automatic correction that strayed outside the sections those reviewers commented on.",
+  "owner": {
+    "name": "Robson Silveira Jr."
+  },
+  "plugins": [
+    {
+      "name": "collaborative-review",
+      "source": "./",
+      "description": "Per-section review kit with an automatic correction loop, guarded by a quality gate."
+    }
+  ]
+}

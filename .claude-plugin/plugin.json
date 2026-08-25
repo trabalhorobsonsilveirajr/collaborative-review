@@ -1,0 +1,21 @@
+{
+  "name": "collaborative-review",
+  "version": "2.0.0",
+  "description": "Turn any HTML page into a reviewable document: per-section comments and voice notes for reviewers, and a quality gate that verifies an automatic correction stayed inside the sections they actually commented on.",
+  "author": {
+    "name": "Robson Silveira Jr."
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/trabalhorobsonsilveirajr/collaborative-review",
+  "repository": "https://github.com/trabalhorobsonsilveirajr/collaborative-review",
+  "keywords": [
+    "feedback",
+    "client-review",
+    "quality-gate",
+    "scope-containment",
+    "landing-page"
+  ],
+  "skills": [
+    "./skills/collaborative-review"
+  ]
+}

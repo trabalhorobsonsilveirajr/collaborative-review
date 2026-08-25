@@ -1,0 +1,36 @@
+# Local machine configuration, never published
+.claude/
+.tools/
+
+# The private-term list for the leak scanner. A list of things that must not be
+# published is itself a list of private things, so it never enters the repo.
+# tools/private-terms.example.json shows the shape.
+.private-terms.json
+
+# Secrets
+.env
+.env.*
+*.key
+*.pem
+secret-*.txt
+credentials*.json
+
+# Gate artifacts
+*.gate-backup
+.*.gate-staged
+
+# Build noise
+node_modules/
+__pycache__/
+*.pyc
+*.log
+
+# Audit scratch space. Red-team runs create victim documents here, and those
+# fixtures imitate real client material on purpose. They must never be published.
+.attack-lab/
+
+# Working plan for the V2 rebuild. Internal document: written in Portuguese,
+# names the author and their employer, and records decisions that are ours rather
+# than the project's. It lives here so it stays next to the code between sessions,
+# but it is not part of what gets published.
+docs/PLANO-V2.md

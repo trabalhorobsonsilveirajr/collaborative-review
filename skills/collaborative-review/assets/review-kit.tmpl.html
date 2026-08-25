@@ -1,0 +1,376 @@
+<!-- REVIEW KIT: REMOVE (or set REVIEW_MODE to false) IN THE FINAL VERSION      -->
+<!-- Per-section comment fields and audio recording, plus an "I finished my     -->
+<!-- review" button. Saved to the backend. Disappears on its own when printing. -->
+
+<!-- PARAMETERIZED TEMPLATE. The double-brace placeholders are replaced by      -->
+<!-- scripts/build-kit.mjs. Names appear here WITHOUT braces on purpose, so     -->
+<!-- substitution does not touch this header:                                   -->
+<!--   SUPABASE_URL           backend project URL                               -->
+<!--   SUPABASE_ANON_KEY      public key. The security policy protects the data -->
+<!--   PROJECT / MATERIAL     scope: which project and which material           -->
+<!--   SECTION_SELECTOR       CSS selector for the reviewable sections          -->
+<!--   SECTION_TITLE_SELECTOR selector for the title INSIDE a section           -->
+<!--   SECTION_BODY_SELECTOR  selector for the body INSIDE a section            -->
+<!--   NAME_BAR_ANCHOR        the name bar is inserted right after this element -->
+<!--   SECTION_LABEL          numbered label for sections, e.g. "Step "         -->
+<!--   BUCKET_AUDIO           storage bucket for the audio files                -->
+<!--                                                                            -->
+<!-- THREE INVARIANTS, never to regress:                                        -->
+<!--   1. Validate name and content BEFORE uploading audio (orphan prevention)  -->
+<!--   2. Recorder state machine plus double-click lock                         -->
+<!--   3. Print rules hide the ENTIRE kit                                       -->
+<style id="review-kit-css">
+  /* Colors and fonts use the page's own design tokens; if the page has none,
+     the fallback values keep a sane default look. */
+  .fb-intro-wrap{max-width:920px;margin:22px auto 0;padding:0 20px}
+  .fb-intro{ background:var(--vermelho-50,#FDECEC); border:1px solid var(--vermelho-200,#F3B7B7); border-radius:16px; padding:1.1rem 1.4rem; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem 1.5rem; }
+  .fb-intro-txt{ font-size:0.92rem; color:var(--cinza-700,#3B3B3B); max-width:640px; }
+  .fb-intro-txt strong{ color:var(--vermelho-700,#A02E2E); }
+  .fb-name-field{ display:flex; flex-direction:column; gap:0.3rem; font-size:0.72rem; font-weight:700; color:var(--vermelho-700,#A02E2E); text-transform:uppercase; letter-spacing:0.04em; }
+  .fb-name-field input{ font-family:var(--font-body,'DM Sans','Segoe UI',system-ui,sans-serif); font-weight:400; text-transform:none; letter-spacing:0; font-size:0.95rem; color:var(--cinza-900,#1E1E1E); padding:0.55rem 0.8rem; border:1px solid var(--cinza-300,#CBCBCB); border-radius:8px; min-width:210px; background:#fff; }
+  .fb-name-field input:focus{ outline:none; border-color:var(--vermelho,#E54C4C); box-shadow:0 0 0 3px rgba(229,76,76,.18); }
+  .fb-block{ margin-top:1.5rem; padding:1.1rem 1.25rem; background:var(--cinza-50,#FAFAFA); border:1px dashed var(--cinza-300,#CBCBCB); border-radius:12px; }
+  .fb-label{ display:block; font-size:0.85rem; color:var(--cinza-700,#3B3B3B); margin-bottom:0.5rem; }
+  .fb-label b{ color:var(--cinza-900,#1E1E1E); }
+  .fb-opt{ color:var(--cinza-400,#9A9A9A); font-weight:400; }
+  .fb-text{ width:100%; font-family:var(--font-body,'DM Sans','Segoe UI',system-ui,sans-serif); font-size:0.95rem; color:var(--cinza-900,#1E1E1E); padding:0.7rem 0.85rem; border:1px solid var(--cinza-300,#CBCBCB); border-radius:8px; resize:vertical; min-height:2.7rem; background:#fff; }
+  .fb-text:focus{ outline:none; border-color:var(--vermelho,#E54C4C); box-shadow:0 0 0 3px rgba(229,76,76,.15); }
+  .fb-actions{ display:flex; align-items:center; gap:0.85rem; margin-top:0.6rem; flex-wrap:wrap; }
+  .fb-send{ font-family:var(--font-head,'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif); font-weight:700; font-size:0.85rem; color:#fff; background:var(--vermelho,#E54C4C); border:none; border-radius:8px; padding:0.55rem 1.15rem; cursor:pointer; transition:background .15s; }
+  .fb-send:hover{ background:var(--vermelho-hover,#CC3333); }
+  .fb-send:disabled{ opacity:0.55; cursor:default; }
+  .fb-status{ font-size:0.82rem; font-weight:600; }
+  .fb-status.ok{ color:var(--sucesso,#2FA968); }
+  .fb-status.err{ color:var(--erro,#C0392B); }
+  .fb-shake{ animation: fb-shake .4s; border-color:var(--erro,#C0392B)!important; }
+  @keyframes fb-shake{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+  .fb-audio-row{ display:flex; align-items:center; gap:0.6rem; margin-top:0.55rem; flex-wrap:wrap; }
+  .fb-rec{ display:inline-flex; align-items:center; gap:0.45rem; font-family:var(--font-head,'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif); font-weight:700; font-size:0.82rem; color:var(--vermelho-hover,#CC3333); background:#fff; border:1px solid var(--vermelho-200,#F3B7B7); border-radius:9999px; padding:0.42rem 0.95rem; cursor:pointer; transition:background .15s,color .15s; }
+  .fb-rec:hover{ background:var(--vermelho-50,#FDECEC); }
+  .fb-rec .dot{ width:9px; height:9px; border-radius:50%; background:var(--vermelho,#E54C4C); }
+  .fb-rec.gravando{ background:var(--vermelho,#E54C4C); color:#fff; border-color:var(--vermelho,#E54C4C); animation:fb-pulse 1.3s infinite; }
+  .fb-rec.gravando .dot{ background:#fff; }
+  @keyframes fb-pulse{ 0%,100%{box-shadow:0 0 0 0 rgba(229,76,76,0.45);} 50%{box-shadow:0 0 0 7px rgba(229,76,76,0);} }
+  .fb-sep{ color:var(--cinza-400,#9A9A9A); font-size:0.8rem; }
+  .fb-audio-prev{ display:flex; align-items:center; gap:0.5rem; }
+  .fb-audio-prev audio{ height:36px; max-width:220px; }
+  .fb-audio-del{ background:none; border:none; color:var(--cinza-500,#7A7A7A); cursor:pointer; font-size:0.85rem; font-weight:600; padding:0.2rem 0.4rem; border-radius:6px; }
+  .fb-audio-del:hover{ color:var(--erro,#C0392B); background:var(--cinza-100,#F4F4F5); }
+  /* ---- review conclusion block ---- */
+  .fb-final-wrap{ max-width:920px; margin:2rem auto 0; padding:0 20px; }
+  .fb-final{ background:var(--vermelho-50,#FDECEC); border:1px solid var(--vermelho-200,#F3B7B7); border-radius:16px; padding:1.2rem 1.4rem; }
+  .fb-final-txt{ font-size:0.95rem; color:var(--cinza-700,#3B3B3B); margin:0 0 0.7rem; }
+  .fb-final-txt strong{ color:var(--vermelho-700,#A02E2E); }
+  /* INVARIANT 3: the ENTIRE kit disappears when printing, final block included */
+  @media print{ .fb-block, .fb-intro-wrap, .fb-final-wrap{ display:none !important; } }
+</style>
+<script id="review-kit-js">
+(function(){
+  "use strict";
+
+  // ===== SWITCH: true shows the review fields | false ships a clean page =====
+  var REVIEW_MODE = true;
+  if(!REVIEW_MODE) return;
+
+  // ===== MATERIAL PARAMETERS (replaced by scripts/build-kit.mjs) =====
+  var SB_URL   = "{{SUPABASE_URL}}";       // URL do projeto Supabase
+  var SB_KEY   = "{{SUPABASE_ANON_KEY}}";  // public key; the security policy is what protects the data
+  var PROJETO  = "{{PROJECT}}";            // e.g. "my-project" - becomes the "project" column in the database
+  var MATERIAL = "{{MATERIAL}}";           // e.g. "Onboarding Guide" - becomes the "material" column in the database
+  var SEL_SECOES        = "{{SECTION_SELECTOR}}";        // selector for the reviewable sections
+  var SEL_TITULO_SECAO  = "{{SECTION_TITLE_SELECTOR}}";  // title INSIDE the section
+  var SEL_CORPO_SECAO   = "{{SECTION_BODY_SELECTOR}}";   // body INSIDE the section
+  var ANCORA_BARRA_NOME = "{{NAME_BAR_ANCHOR}}";     // the name bar goes right AFTER this element
+  var ROTULO_SECAO      = "{{SECTION_LABEL}}";          // numbered label, keeps its trailing space
+  var BUCKET_AUDIO      = "{{BUCKET_AUDIO}}";          // storage bucket for audio
+
+  // ---- language -------------------------------------------------------------
+  // The dictionaries are embedded by build-kit.mjs, so the page carries its own
+  // translations: no extra request, works offline, works from a file:// path.
+  // The REVIEWER's browser chooses. Anything untranslated falls back to English
+  // key by key, so a partial translation still renders a usable page.
+  var I18N = /*__I18N__*/{"en":{}};
+  var IDIOMA = (function(){
+    var pedido = String(navigator.language || "en").toLowerCase().replace(/_/g, "-");
+    var codigos = Object.keys(I18N);
+    var i;
+    for(i=0;i<codigos.length;i++) if(codigos[i].toLowerCase() === pedido) return codigos[i];
+    var raiz = pedido.split("-")[0];
+    for(i=0;i<codigos.length;i++) if(codigos[i].toLowerCase() === raiz) return codigos[i];
+    for(i=0;i<codigos.length;i++) if(codigos[i].toLowerCase().split("-")[0] === raiz) return codigos[i];
+    return "en";
+  })();
+  // T() returns the visible text for a key. A key with no translation shows the
+  // English one; a key that exists nowhere shows the key itself, which is ugly
+  // on purpose - a visible "kit.send" gets reported, a blank button does not.
+  function T(chave){
+    var dic = I18N[IDIOMA] || {};
+    if(chave in dic) return dic[chave];
+    var base = I18N.en || {};
+    return (chave in base) ? base[chave] : chave;
+  }
+  try{ document.documentElement.setAttribute("data-review-lang", IDIOMA); }catch(e){}
+
+  // The reviewer name is GLOBAL on purpose: typed once, valid for every material
+  var LS_NOME = "pa_fbc_nome";
+  // A project+material slug namespaces drafts and the conclusion lock, so a draft
+  // on one material never leaks into another in the same browser.
+  function slugify(s){ return String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,""); }
+  var SLUG_MATERIAL = slugify(PROJETO + "_" + MATERIAL);
+  function draftKey(k){ return "pa_fbc_draft_" + SLUG_MATERIAL + "_" + k; }
+  var LS_CONCLUIDO = "pa_fbc_concluido_" + SLUG_MATERIAL;  // re-submission guard for the finish button
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  // ---- name bar (right below the anchor element) ----
+  var nome0 = localStorage.getItem(LS_NOME) || "";
+  var introWrap = document.createElement("div");
+  introWrap.className = "fb-intro-wrap";
+  introWrap.innerHTML =
+    '<div class="fb-intro">' +
+      '<div class="fb-intro-txt"><strong>' + esc(T("kit.mode")) + '</strong> ' + T("kit.intro") + '</div>' +
+      '<label class="fb-name-field">' + esc(T("kit.yourName")) + '<input id="fb-nome" type="text" placeholder="' + esc(T("kit.namePlaceholder")) + '" value="' + esc(nome0) + '" autocomplete="name"></label>' +
+    '</div>';
+  var ancora = document.querySelector(ANCORA_BARRA_NOME);
+  if(ancora){ ancora.parentNode.insertBefore(introWrap, ancora.nextSibling); }
+  else{ document.body.insertBefore(introWrap, document.body.firstChild); }  // anchor not found: fall back to the top of the body
+  var nomeInput = introWrap.querySelector("#fb-nome");
+  nomeInput.addEventListener("input", function(){ localStorage.setItem(LS_NOME, nomeInput.value.trim()); });
+
+  function getNome(){ return (localStorage.getItem(LS_NOME) || "").trim(); }
+  function requireNome(st, msg){
+    if(!getNome()){
+      nomeInput.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(function(){ nomeInput.focus(); }, 350);
+      nomeInput.classList.add("fb-shake");
+      setTimeout(function(){ nomeInput.classList.remove("fb-shake"); }, 800);
+      if(st){ st.textContent = msg || T("kit.nameRequired"); st.className = "fb-status err"; }
+      return false;
+    }
+    return true;
+  }
+
+  async function enviar(sectionValue, texto, audioPath, st, btn){
+    var comentario = (texto || "").trim();
+    if(!comentario && !audioPath){ st.textContent = T("kit.writeSomething"); st.className = "fb-status err"; return false; }
+    if(!requireNome(st)){ return false; }
+    btn.disabled = true; st.textContent = T("kit.sending"); st.className = "fb-status";
+    try{
+      // the section goes through PLAIN (no prefix): scope lives in its own columns
+      var payload = { reviewer_name: getNome(), section: sectionValue, project: PROJETO, material: MATERIAL, type: "comment", user_agent: navigator.userAgent.slice(0,300) };
+      if(comentario){ payload.comment = comentario; }
+      if(audioPath){ payload.audio_path = audioPath; }
+      var res = await fetch(SB_URL + "/rest/v1/feedbacks", {
+        method: "POST",
+        headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" },
+        body: JSON.stringify(payload)
+      });
+      if(res.ok){ st.textContent = T("kit.sent"); st.className = "fb-status ok"; return true; }
+      var t = await res.text(); console.warn("feedback error", res.status, t);
+      st.textContent = T("kit.notSent"); st.className = "fb-status err"; return false;
+    }catch(e){
+      console.warn(e);
+      st.textContent = T("kit.noConnection"); st.className = "fb-status err"; return false;
+    }finally{ btn.disabled = false; }
+  }
+
+  function pickMime(){
+    var cands = ["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg"];
+    if(!("MediaRecorder" in window)) return "";
+    for(var i=0;i<cands.length;i++){ try{ if(MediaRecorder.isTypeSupported(cands[i])) return cands[i]; }catch(e){} }
+    return "";
+  }
+  function baseMime(m){ return (m||"audio/webm").split(";")[0]; }
+  function extFor(m){ if(m.indexOf("mp4")>=0) return "m4a"; if(m.indexOf("ogg")>=0) return "ogg"; return "webm"; }
+  async function uploadAudio(blob, mimeBase, ext){
+    var fname = String(Date.now()) + "-" + Math.random().toString(36).slice(2,10) + "." + ext;
+    var res = await fetch(SB_URL + "/storage/v1/object/" + BUCKET_AUDIO + "/" + fname, {
+      method: "POST",
+      headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": mimeBase, "x-upsert": "false" },
+      body: blob
+    });
+    if(!res.ok){ var t = await res.text(); console.warn("audio upload error", res.status, t); throw new Error("upload_falhou"); }
+    return fname;
+  }
+
+  // First argument: the value stored in the database. NEVER translated, because
+  // the dashboard and the engine match on it, and one string per language would
+  // split a single section into several.
+  // Third argument: what the reviewer reads. Translated. When absent it falls
+  // back to the stored value, which is right for page sections: those already
+  // carry the page's own words, in the page's own language.
+  function makeBlock(sectionValue, dkey, sectionLabel){
+    var wrap = document.createElement("div");
+    wrap.className = "fb-block";
+    wrap.innerHTML =
+      '<label class="fb-label">' + esc(T("kit.notesOn")) + ' <b>' + esc(sectionLabel || sectionValue) + '</b> <span class="fb-opt">' + esc(T("kit.optional")) + '</span></label>' +
+      '<textarea class="fb-text" rows="2" placeholder="' + esc(T("kit.notesPlaceholder")) + '"></textarea>' +
+      '<div class="fb-audio-row">' +
+        '<button type="button" class="fb-rec"><span class="dot"></span> ' + esc(T("kit.record")) + '</button>' +
+        '<span class="fb-sep">' + esc(T("kit.orTypeAbove")) + '</span>' +
+        '<span class="fb-audio-prev" hidden></span>' +
+      '</div>' +
+      '<div class="fb-actions"><button type="button" class="fb-send">' + esc(T("kit.send")) + '</button><span class="fb-status" role="status" aria-live="polite"></span></div>';
+    var ta = wrap.querySelector(".fb-text");
+    var btn = wrap.querySelector(".fb-send");
+    var st = wrap.querySelector(".fb-status");
+    var recBtn = wrap.querySelector(".fb-rec");
+    var prev = wrap.querySelector(".fb-audio-prev");
+    var dk = draftKey(dkey);
+    ta.value = localStorage.getItem(dk) || "";
+    ta.addEventListener("input", function(){ localStorage.setItem(dk, ta.value); });
+
+    // INVARIANT 2: recorder state machine (idle / opening / recording)
+    // plus a double-click lock. Do NOT simplify this.
+    var rec = null, chunks = [], audioBlob = null, chosenMime = "", stream = null, timer = null, secs = 0;
+    var estado = "idle";
+    var enviarAoParar = false;  // if the user hits Send while recording: stop and send in one click
+
+    function limparAudio(){
+      audioBlob = null; prev.hidden = true; prev.innerHTML = "";
+      recBtn.classList.remove("gravando"); recBtn.innerHTML = '<span class="dot"></span> ' + esc(T("kit.record"));
+    }
+    function pararStream(){ if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream = null; } }
+    function pararTimer(){ if(timer){ clearInterval(timer); timer = null; } }
+    function tick(){ secs++; var m = Math.floor(secs/60), s = secs%60; recBtn.innerHTML = '<span class="dot"></span> ' + esc(T("kit.stopTimer")) + ' (' + m + ':' + (s<10?'0':'') + s + ')'; }
+
+    async function iniciar(){
+      if(!navigator.mediaDevices || !("MediaRecorder" in window)){ st.textContent = T("kit.noRecording"); st.className = "fb-status err"; return; }
+      estado = "abrindo";
+      recBtn.classList.add("gravando"); recBtn.innerHTML = '<span class="dot"></span> ' + esc(T("kit.openingMicShort"));
+      st.textContent = ""; st.className = "fb-status";
+      pararTimer(); pararStream(); rec = null;
+      try{ stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+      catch(e){
+        estado = "idle";
+        recBtn.classList.remove("gravando"); recBtn.innerHTML = '<span class="dot"></span> ' + esc(T("kit.record"));
+        st.textContent = T("kit.micDenied"); st.className = "fb-status err"; return;
+      }
+      chosenMime = pickMime(); chunks = [];
+      try{ rec = chosenMime ? new MediaRecorder(stream, { mimeType: chosenMime }) : new MediaRecorder(stream); }
+      catch(e){ rec = new MediaRecorder(stream); }
+      rec.ondataavailable = function(ev){ if(ev.data && ev.data.size) chunks.push(ev.data); };
+      rec.onstop = function(){
+        pararStream(); pararTimer(); estado = "idle";
+        var type = (rec && rec.mimeType) ? rec.mimeType : (chosenMime || "audio/webm");
+        audioBlob = new Blob(chunks, { type: type }); chosenMime = type;
+        recBtn.classList.remove("gravando"); recBtn.innerHTML = '<span class="dot"></span> ' + esc(T("kit.recordAgain"));
+        prev.hidden = false;
+        var url = URL.createObjectURL(audioBlob); prev.innerHTML = '';
+        var a = document.createElement("audio"); a.controls = true; a.src = url; prev.appendChild(a);
+        var del = document.createElement("button"); del.type = "button"; del.className = "fb-audio-del"; del.textContent = T("kit.discard");
+        del.addEventListener("click", limparAudio); prev.appendChild(del);
+        st.textContent = ""; st.className = "fb-status";
+        if(enviarAoParar){ enviarAoParar = false; btn.click(); }  // envia sozinho: 1 clique manda tudo
+      };
+      secs = 0; estado = "gravando"; recBtn.classList.add("gravando"); tick();
+      timer = setInterval(tick, 1000); rec.start();
+    }
+    function parar(){ if(rec && rec.state !== "inactive"){ rec.stop(); } }
+
+    recBtn.addEventListener("click", function(){
+      if(estado === "abrindo"){ return; }
+      if(estado === "gravando"){ parar(); } else{ iniciar(); }
+    });
+
+    btn.addEventListener("click", async function(){
+      if(estado === "abrindo"){ st.textContent = T("kit.openingMic"); st.className = "fb-status"; return; }
+      if(estado === "gravando"){ enviarAoParar = true; st.textContent = T("kit.finishing"); st.className = "fb-status"; parar(); return; }
+      // INVARIANT 1: validate BEFORE uploading audio, or the file lands orphaned
+      if(!ta.value.trim() && !audioBlob){ st.textContent = T("kit.writeSomething"); st.className = "fb-status err"; return; }
+      if(!requireNome(st)){ return; }
+      var audioPath = null;
+      if(audioBlob){
+        btn.disabled = true; st.textContent = T("kit.sendingAudio"); st.className = "fb-status";
+        try{ audioPath = await uploadAudio(audioBlob, baseMime(chosenMime), extFor(chosenMime)); }
+        catch(e){ st.textContent = T("kit.audioFailed"); st.className = "fb-status err"; btn.disabled = false; return; }
+        btn.disabled = false;
+      }
+      var ok = await enviar(sectionValue, ta.value, audioPath, st, btn);
+      if(ok){ ta.value = ""; localStorage.removeItem(dk); limparAudio(); }
+    });
+    return wrap;
+  }
+
+  // ---- final submit button: "I finished my review" ----
+  // A row of type "conclusion" is the signal the correction engine waits for.
+  function makeFinalWrap(){
+    var wrap = document.createElement("div");
+    wrap.className = "fb-final-wrap";
+    wrap.innerHTML =
+      '<div class="fb-final">' +
+        '<p class="fb-final-txt"><strong>🏁 ' + esc(T("kit.finishedReviewing")) + '</strong> ' + esc(T("kit.finalNoteIntro")) + '</p>' +
+        '<textarea class="fb-text fb-final-obs" rows="2" placeholder="' + esc(T("kit.finalNotePlaceholder")) + '"></textarea>' +
+        '<div class="fb-actions"><button type="button" class="fb-send fb-final-btn">&#10003; ' + esc(T("kit.finishReview")) + '</button><span class="fb-status" role="status" aria-live="polite"></span></div>' +
+      '</div>';
+    var ta = wrap.querySelector(".fb-final-obs");
+    var btn = wrap.querySelector(".fb-final-btn");
+    var st = wrap.querySelector(".fb-status");
+    function travar(){ btn.disabled = true; btn.textContent = T("kit.reviewComplete"); ta.disabled = true; }
+
+    // Re-submission guard: if this browser already finished, render it locked.
+    if(localStorage.getItem(LS_CONCLUIDO) === "1"){
+      travar();
+      st.textContent = T("kit.alreadyRecorded"); st.className = "fb-status ok";
+      return wrap;
+    }
+
+    btn.addEventListener("click", async function(){
+      if(btn.disabled){ return; }  // trava anti-duplo-clique
+      if(!requireNome(st, T("kit.nameRequired"))){ return; }
+      btn.disabled = true; st.textContent = T("kit.sending"); st.className = "fb-status";
+      try{
+        var msg = (ta.value || "").trim();
+        var payload = {
+          reviewer_name: getNome(),
+          section: "Review conclusion",
+          // the default comment satisfies the "text OR audio" constraint when the note is empty
+          comment: msg || T("kit.conclusionDefault"),
+          project: PROJETO,
+          material: MATERIAL,
+          type: "conclusion",
+          user_agent: navigator.userAgent.slice(0,300)
+        };
+        var res = await fetch(SB_URL + "/rest/v1/feedbacks", {
+          method: "POST",
+          headers: { "apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json", "Prefer": "return=minimal" },
+          body: JSON.stringify(payload)
+        });
+        if(res.ok){
+          localStorage.setItem(LS_CONCLUIDO, "1");
+          travar();
+          st.textContent = T("kit.reviewRecorded"); st.className = "fb-status ok";
+          return;
+        }
+        var t = await res.text(); console.warn("conclusion error", res.status, t);
+        btn.disabled = false;
+        st.textContent = T("kit.notSent"); st.className = "fb-status err";
+      }catch(e){
+        console.warn(e);
+        btn.disabled = false;
+        st.textContent = T("kit.noConnectionRetry"); st.className = "fb-status err";
+      }
+    });
+    return wrap;
+  }
+
+  // ---- injection: one review block at the end of each section ----
+  var secoes = document.querySelectorAll(SEL_SECOES);
+  var ultimaSecao = null;
+  secoes.forEach(function(sec, i){
+    var h = sec.querySelector(SEL_TITULO_SECAO);
+    var nome = ROTULO_SECAO + (i+1) + (h ? ": " + h.textContent.trim() : "");
+    var corpo = sec.querySelector(SEL_CORPO_SECAO) || sec;  // section with no body element? use the section itself
+    corpo.appendChild(makeBlock(nome, "p" + (i+1)));
+    ultimaSecao = sec;
+  });
+
+  // ---- general comment block plus conclusion, right after the last section ----
+  if(ultimaSecao){
+    var geral = makeBlock("General comments", "general", T("kit.generalComments"));
+    ultimaSecao.parentNode.insertBefore(geral, ultimaSecao.nextSibling);
+    var finalWrap = makeFinalWrap();
+    geral.parentNode.insertBefore(finalWrap, geral.nextSibling);
+  }
+})();
+</script>
+<!-- ===================== FIM DO REVIEW KIT ===================== -->

@@ -1,0 +1,1036 @@
+<!doctype html>
+<!--
+  COLLABORATIVE REVIEW DASHBOARD - collaborative-review skill
+
+  Serves EVERY project and material using the review kit. The filters at the top
+  narrow the view; the backend is shared.
+
+  SINGLE PLACEHOLDER (replace when instantiating):
+    {{EDGE_FN_URL}}  the deployed read-feedback function URL
+
+  The approvals function URL is NOT a second placeholder: it is DERIVED from the
+  one above at runtime, by swapping the function name. That makes it impossible
+  for the two to point at different backends, and whoever installs this has one
+  value to get right instead of two that can drift apart.
+
+  WHAT IT READS
+    Request:  POST {"password": "..."}  (validated server-side)
+    Response: the feedback rows, with signed URLs for any audio.
+
+    Rows of type 'decision' carry a JSON string in the comment field describing a
+    structural item awaiting a decision. A comment that does not parse in that
+    format falls back to a read-only legacy card rather than breaking the page.
+
+  WHAT IT WRITES
+    Approvals go through the approvals function, authenticated by the same
+    password. The dashboard never writes to the database directly, and never
+    applies anything itself: it only records the owner's verdict. The watcher on
+    the machine is what turns a verdict into an applied change.
+
+  HOW AN ITEM'S STATE IS DECIDED
+    By the processed timestamp, not by a status field:
+
+      - No record at all: the item was never decided. Buttons shown.
+      - Recorded, not yet processed: the owner decided, the watcher has not
+        stamped the gate yet. Shows as awaiting the watcher.
+      - Processed: the watcher stamped the gate. Shows as applied or rejected.
+
+    In the last two cases the approve and reject buttons disappear, because the
+    decision is closed.
+
+    The dashboard queries the real state BEFORE rendering. That way an item
+    already decided never shows its buttons again on a fresh page load. Relying
+    on browser memory alone was the bug that made this necessary.
+
+  DEMO MODE (#fixtures)
+    Skips login, shows a banner, and loads fictional data covering every state.
+    Useful for seeing the interface without a backend, and for testing changes
+    without touching real reviewer data.
+
+  SECURITY
+    Reading and recording approvals ALWAYS go through the server functions,
+    authenticated by the dashboard password. The password lives only in the
+    browser's local storage of whoever signs in. Nothing here talks to the
+    database directly, and the page holds no service credentials.
+-->
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Internal collaborative review dashboard: reviewer comments, conclusions, and approvals in one place.">
+<meta property="og:title" content="Collaborative Review Dashboard">
+<meta property="og:description" content="Internal collaborative review dashboard: reviewer comments, conclusions, and approvals in one place.">
+<meta property="og:image" content="og-image.png">
+<title>Collaborative Review Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23E54C4C'/%3E%3Cpath d='M7 8h10M7 12h10M7 16h6' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+  :root{
+    --vermelho-50:oklch(0.97 0.02 25); --vermelho-100:oklch(0.94 0.04 25); --vermelho-200:oklch(0.88 0.08 25);
+    /* Danger color darkened so white text on it clears the WCAG AA contrast ratio*/
+    --vermelho-500:oklch(0.58 0.20 25); --vermelho-600:oklch(0.52 0.22 25); --vermelho-700:oklch(0.45 0.20 25);
+    --cinza-50:oklch(0.99 0 0); --cinza-100:oklch(0.97 0 0); --cinza-200:oklch(0.91 0 0); --cinza-300:oklch(0.82 0 0);
+    --cinza-400:oklch(0.65 0 0); --cinza-500:oklch(0.55 0 0); --cinza-600:oklch(0.45 0 0); --cinza-700:oklch(0.35 0 0);
+    --cinza-800:oklch(0.25 0 0); --cinza-900:oklch(0.15 0 0);
+    /* Success color darkened so white text on it clears the WCAG AA contrast ratio*/
+    --sucesso:oklch(0.53 0.19 145); --sucesso-bg:oklch(0.96 0.05 145); --sucesso-borda:oklch(0.85 0.10 145);
+    --alerta:oklch(0.75 0.15 85); --alerta-bg:oklch(0.97 0.04 85); --alerta-borda:oklch(0.87 0.09 85); --alerta-txt:oklch(0.45 0.12 75);
+    --erro:oklch(0.55 0.22 27);
+    --radius-md:8px; --radius-lg:12px; --radius-xl:16px;
+    --font-heading:"Plus Jakarta Sans",ui-sans-serif,system-ui,sans-serif; --font-sans:"DM Sans",ui-sans-serif,system-ui,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;}
+  body{margin:0;font-family:var(--font-sans);color:var(--cinza-900);background:var(--cinza-100);line-height:1.55;font-size:16px;}
+  h1,h2,h3{font-family:var(--font-heading);font-weight:700;letter-spacing:-0.01em;margin:0;}
+  .container{width:100%;max-width:920px;margin:0 auto;padding:0 1.25rem;}
+  .topbar{background:#fff;border-bottom:1px solid var(--cinza-200);position:sticky;top:0;z-index:10;}
+  .topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0.9rem 0;flex-wrap:wrap;}
+  .wordmark{font-family:var(--font-heading);font-weight:800;font-size:1.05rem;color:var(--vermelho-600);}
+  .wordmark span{color:var(--cinza-900);}
+  .badge{display:inline-flex;align-items:center;gap:0.4rem;background:var(--vermelho-50);color:var(--vermelho-700);font-size:0.78rem;font-weight:700;padding:0.35rem 0.8rem;border-radius:9999px;}
+  .btn{font-family:var(--font-heading);font-weight:600;font-size:0.9rem;color:#fff;background:var(--vermelho-500);border:none;border-radius:var(--radius-md);padding:0.6rem 1.2rem;cursor:pointer;transition:background .15s;}
+  .btn:hover{background:var(--vermelho-600);} .btn:disabled{opacity:0.6;cursor:default;}
+  .btn.ghost{background:#fff;color:var(--vermelho-600);border:1px solid var(--vermelho-200);}
+  .btn.ghost:hover{background:var(--vermelho-50);}
+  /* login */
+  .gate{max-width:400px;margin:5rem auto;background:#fff;border:1px solid var(--cinza-200);border-radius:var(--radius-xl);padding:2rem;box-shadow:0 10px 40px -20px rgba(0,0,0,0.2);}
+  .gate h2{font-size:1.3rem;margin-bottom:0.4rem;}
+  .gate p{color:var(--cinza-600);font-size:0.9rem;margin:0 0 1.25rem;}
+  .gate input{width:100%;font-family:var(--font-sans);font-size:1rem;padding:0.7rem 0.9rem;border:1px solid var(--cinza-300);border-radius:var(--radius-md);margin-bottom:1rem;}
+  .gate input:focus{outline:none;border-color:var(--vermelho-500);box-shadow:0 0 0 3px oklch(0.62 0.20 25 / 18%);}
+  .gate .btn{width:100%;}
+  .gate .err{color:var(--erro);font-size:0.85rem;font-weight:600;margin-top:0.75rem;min-height:1.2rem;}
+  /* cabecalho + barra de acoes */
+  .head{padding:1.75rem 0 0.5rem;}
+  .head h1{font-size:1.6rem;margin-bottom:0.3rem;}
+  .head p{color:var(--cinza-600);font-size:0.92rem;}
+  .toolbar{display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin:1.25rem 0 0.75rem;}
+  .count{font-size:0.9rem;color:var(--cinza-700);font-weight:600;}
+  /* filtros de projeto e material */
+  .filtros{display:flex;align-items:flex-end;gap:0.9rem;flex-wrap:wrap;margin:0 0 1.1rem;background:#fff;border:1px solid var(--cinza-200);border-radius:var(--radius-lg);padding:0.85rem 1rem;}
+  .filtro{display:flex;flex-direction:column;gap:0.25rem;font-size:0.72rem;font-weight:700;color:var(--cinza-600);text-transform:uppercase;letter-spacing:0.04em;}
+  .filtro select{font-family:var(--font-sans);font-size:0.92rem;color:var(--cinza-900);padding:0.5rem 0.7rem;border:1px solid var(--cinza-300);border-radius:var(--radius-md);background:#fff;min-width:180px;max-width:280px;cursor:pointer;}
+  .filtro select:focus{outline:none;border-color:var(--vermelho-500);box-shadow:0 0 0 3px oklch(0.62 0.20 25 / 18%);}
+  .filtro-limpar{font-size:0.82rem;color:var(--vermelho-600);font-weight:600;background:none;border:none;cursor:pointer;padding:0.5rem 0.2rem;text-decoration:underline;}
+  /* abas */
+  .tabs{display:flex;gap:0.4rem;border-bottom:2px solid var(--cinza-200);margin-bottom:1.1rem;}
+  .tab{font-family:var(--font-heading);font-weight:700;font-size:0.92rem;color:var(--cinza-500);background:none;border:none;border-bottom:3px solid transparent;padding:0.55rem 0.9rem;margin-bottom:-2px;cursor:pointer;}
+  .tab:hover{color:var(--cinza-700);}
+  .tab[aria-selected="true"]{color:var(--vermelho-600);border-bottom-color:var(--vermelho-500);}
+  .tab .tab-n{display:inline-block;font-size:0.72rem;font-weight:800;color:var(--alerta-txt);background:var(--alerta-bg);border:1px solid var(--alerta-borda);border-radius:9999px;padding:0 0.5rem;margin-left:0.35rem;}
+  .tab .tab-n.zero{color:var(--cinza-500);background:var(--cinza-100);border-color:var(--cinza-200);}
+  /* grupos de comentarios */
+  .grupo{background:#fff;border:1px solid var(--cinza-200);border-radius:var(--radius-xl);margin-bottom:1.1rem;overflow:hidden;}
+  .grupo-head{background:var(--cinza-50);border-bottom:1px solid var(--cinza-200);padding:0.85rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;}
+  .grupo-head h3{font-size:0.98rem;color:var(--cinza-900);}
+  .grupo-head .n{font-size:0.75rem;font-weight:800;color:#fff;background:var(--vermelho-500);border-radius:9999px;padding:0.15rem 0.6rem;flex-shrink:0;}
+  .grupo.conclusao{border-color:var(--sucesso-borda);}
+  .grupo.conclusao .grupo-head{background:var(--sucesso-bg);border-bottom-color:var(--sucesso-borda);}
+  .coment{padding:1rem 1.25rem;border-bottom:1px dashed var(--cinza-200);}
+  .coment:last-child{border-bottom:none;}
+  .coment.conclusao{background:var(--sucesso-bg);}
+  .coment-top{display:flex;align-items:baseline;gap:0.6rem;margin-bottom:0.3rem;flex-wrap:wrap;}
+  .coment-nome{font-weight:700;color:var(--vermelho-700);font-size:0.9rem;}
+  .coment-data{font-size:0.78rem;color:var(--cinza-500);}
+  .coment-txt{font-size:0.95rem;color:var(--cinza-800);white-space:pre-wrap;}
+  .coment-tag{font-size:0.72rem;font-weight:700;color:var(--vermelho-700);background:var(--vermelho-50);border-radius:9999px;padding:0.1rem 0.55rem;}
+  .coment-tag.escopo{color:var(--cinza-600);background:var(--cinza-100);}
+  .coment-tag.ok{color:#fff;background:var(--sucesso);}
+  .coment-audio{display:flex;align-items:center;gap:0.6rem;margin-top:0.4rem;flex-wrap:wrap;}
+  .coment-audio audio{height:38px;max-width:280px;}
+  .coment-baixar{font-size:0.8rem;color:var(--vermelho-600);font-weight:600;text-decoration:none;}
+  .coment-baixar:hover{text-decoration:underline;}
+  /* pending decision cards */
+  .gate-grupo-titulo{font-family:var(--font-heading);font-weight:700;font-size:0.85rem;color:var(--cinza-700);background:var(--cinza-100);border:1px solid var(--cinza-200);border-radius:var(--radius-md);padding:0.5rem 0.8rem;margin:1.4rem 0 0.7rem;word-break:break-all;}
+  .gate-grupo-titulo:first-child{margin-top:0;}
+  .gate-grupo-legado{color:var(--cinza-500);}
+  .decisao{background:var(--alerta-bg);border:1px solid var(--alerta-borda);border-radius:var(--radius-xl);margin-bottom:1.1rem;padding:1rem 1.25rem;}
+  .decisao-top{display:flex;align-items:baseline;gap:0.6rem;margin-bottom:0.35rem;flex-wrap:wrap;}
+  .decisao-titulo{font-family:var(--font-heading);font-weight:700;font-size:0.95rem;color:var(--alerta-txt);}
+  .decisao-txt{font-size:0.95rem;color:var(--cinza-800);white-space:pre-wrap;}
+  .decisao-hint{font-size:0.8rem;color:var(--cinza-500);margin-top:0.5rem;}
+  .vazio{text-align:center;color:var(--cinza-500);padding:3rem 1rem;background:#fff;border:1px dashed var(--cinza-300);border-radius:var(--radius-xl);}
+  footer{padding:2rem 0;text-align:center;color:var(--cinza-500);font-size:0.82rem;}
+  @media(max-width:560px){ .head h1{font-size:1.35rem;} .filtro select{min-width:140px;} }
+
+  /* Demo mode banner */
+  .banner-demo{background:var(--alerta-bg);border-bottom:1px solid var(--alerta-borda);color:var(--alerta-txt);font-weight:700;font-size:0.85rem;text-align:center;padding:0.6rem 1rem;}
+
+  /* Decision card: structured fields plus per-item approval */
+  #pane-decisoes{padding-bottom:6rem;}
+  .decisao-campo{margin:0.55rem 0;}
+  .decisao-campo strong{display:block;font-size:0.72rem;font-weight:800;color:var(--cinza-600);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.15rem;}
+  .decisao-proposta-label{display:block;font-size:0.78rem;font-weight:700;color:var(--cinza-700);margin:0.85rem 0 0.35rem;}
+  .decisao-textarea{width:100%;font-family:var(--font-sans);font-size:0.92rem;color:var(--cinza-900);padding:0.65rem 0.8rem;border:1px solid var(--cinza-300);border-radius:var(--radius-md);resize:vertical;min-height:5rem;}
+  .decisao-textarea:focus{outline:none;border-color:var(--vermelho-500);box-shadow:0 0 0 3px oklch(0.62 0.20 25 / 18%);}
+  .decisao-textarea[readonly]{background:var(--cinza-100);color:var(--cinza-500);}
+  .decisao-contador{font-size:0.72rem;color:var(--cinza-500);text-align:right;margin-top:0.2rem;}
+  .decisao-acoes{display:flex;flex-wrap:wrap;gap:0.6rem;margin-top:0.75rem;}
+  /* Touch target of at least 44px for the approve and reject buttons (WCAG 2.5.5) */
+  .btn-decision{font-family:var(--font-heading);font-weight:700;font-size:0.9rem;min-height:44px;min-width:44px;padding:0.6rem 1.1rem;border-radius:var(--radius-md);cursor:pointer;border:1px solid var(--cinza-300);background:#fff;color:var(--cinza-800);}
+  .btn-decision.approve{border-color:var(--sucesso-borda);}
+  .btn-decision.approve:hover,.btn-decision.approve.active{background:var(--sucesso);border-color:var(--sucesso);color:#fff;}
+  .btn-decision.reject{border-color:var(--erro);}
+  .btn-decision.reject:hover,.btn-decision.reject.active{background:var(--erro);border-color:var(--erro);color:#fff;}
+  .btn-decision:disabled{opacity:0.5;cursor:default;}
+  .decisao.marked-approved{border-color:var(--sucesso-borda);background:var(--sucesso-bg);}
+  .decisao.marked-rejected{border-color:var(--erro);background:oklch(0.97 0.03 27);}
+  .decisao.enviado{opacity:0.75;}
+  .coment-tag.error_message{color:#fff;background:var(--erro);}
+
+  /* The "sent, not yet applied" state uses the warning tone: it is neither success*/
+  .coment-tag.pendente{color:var(--alerta-txt);background:var(--alerta-bg);border:1px solid var(--alerta-borda);}
+  /* The processed state means the decision is closed: a dimmer card than a plain
+     sent one, signalling there is no further action available here */
+  .decisao.processada{opacity:0.6;}
+
+  /* v2.1: barra fixa "Send approvals (N)" */
+  .barra-aprovacoes{position:fixed;left:0;right:0;bottom:0;background:var(--cinza-900);color:#fff;display:none;align-items:center;justify-content:space-between;gap:1rem;padding:0.85rem 1.25rem;flex-wrap:wrap;z-index:20;box-shadow:0 -8px 24px -12px rgba(0,0,0,0.35);}
+  .barra-aprovacoes-texto{font-size:0.85rem;color:oklch(0.9 0 0);}
+  .barra-aprovacoes .btn:disabled{opacity:0.4;}
+
+  /* Short confirmation message after sending */
+  .toast{position:fixed;left:50%;bottom:5.5rem;transform:translate(-50%,10px);background:var(--cinza-900);color:#fff;padding:0.65rem 1.1rem;border-radius:9999px;font-size:0.85rem;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:30;max-width:90vw;text-align:center;}
+  .toast.show{opacity:1;transform:translate(-50%,0);}
+
+  @media(max-width:560px){ .barra-aprovacoes{padding:0.7rem 1rem;} .decisao-acoes{gap:0.5rem;} }
+  .idioma-label{ margin-left:auto; display:inline-flex; align-items:center; gap:.4rem; font-size:.82rem; opacity:.75; }
+  .idioma-select{ font:inherit; font-size:.82rem; padding:.2rem .4rem; border-radius:6px; border:1px solid rgba(0,0,0,.18); background:transparent; color:inherit; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container topbar-inner">
+    <span class="wordmark">collaborative<span>review</span></span>
+    <span class="badge" data-i18n="dash.badge">Internal dashboard</span>
+  </div>
+</div>
+
+<!-- DEMO MODE (only appears at #fixtures) -->
+<div id="banner-demo" class="banner-demo" style="display:none" role="status">
+  <span data-i18n="dash.demoBanner"><strong>DEMO MODE</strong>: fictional data, nothing is saved (login skipped).</span>
+</div>
+
+<!-- LOGIN (the password is validated by the server function) -->
+<div id="gate" class="gate">
+  <h2 data-i18n="dash.title">Review Dashboard</h2>
+  <p data-i18n="dash.restricted">Restricted area. Enter the password to see reviewer comments, conclusions, and pending decisions.</p>
+  <input id="password" type="password" placeholder="Dashboard password" data-i18n-placeholder="dash.passwordPlaceholder" autocomplete="current-password">
+  <button id="entrar" class="btn" data-i18n="dash.signIn">Sign in</button>
+  <div id="gate-err" class="err" role="alert"></div>
+</div>
+
+<!-- CONTENT -->
+<main id="app" class="container" style="display:none">
+  <div class="head">
+    <h1 data-i18n="dash.title">Collaborative Review Dashboard</h1>
+    <p data-i18n="dash.commentsIntro">Comments and audio submitted by reviewers, grouped by section. Use the filters to narrow by project or material.</p>
+  </div>
+
+  <div class="toolbar">
+    <button id="atualizar" class="btn ghost" data-i18n="dash.refresh">Refresh</button>
+    <button id="copy-all" class="btn ghost" data-i18n="dash.copyAll">Copy all</button>
+    <span id="count" class="count"></span>
+    <label class="idioma-label" for="f-idioma">
+      <span data-i18n="dash.language">Language</span>
+      <select id="f-idioma" class="idioma-select"></select>
+    </label>
+  </div>
+
+  <!-- FILTERS: filled from the loaded data; changing one re-renders without a new request -->
+  <div class="filtros">
+    <label class="filtro"><span data-i18n="dash.projectLabel">Project</span>
+      <select id="f-projeto"><option value="" data-i18n="dash.allProjects">All projects</option></select>
+    </label>
+    <label class="filtro"><span data-i18n="dash.materialLabel">Material</span>
+      <select id="f-material"><option value="" data-i18n="dash.allMaterials">All materials</option></select>
+    </label>
+    <button id="f-limpar" class="filtro-limpar" type="button" data-i18n="dash.clearFilters">Clear filters</button>
+  </div>
+
+  <!-- ABAS -->
+  <div class="tabs" role="tablist">
+    <button id="tab-comentarios" class="tab" role="tab" aria-selected="true" aria-controls="pane-comentarios" data-i18n="dash.comments">Comments</button>
+    <button id="tab-decisoes" class="tab" role="tab" aria-selected="false" aria-controls="pane-decisoes"><span data-i18n="dash.pendingDecisions">Pending decisions</span> <span id="decisoes-n" class="tab-n zero">0</span></button>
+  </div>
+
+  <div id="pane-comentarios" role="tabpanel" aria-labelledby="tab-comentarios"></div>
+  <div id="pane-decisoes" role="tabpanel" aria-labelledby="tab-decisoes" style="display:none">
+    <!-- Each card is one item (approve/reject plus an editable proposal). The parent only
+         toggles the tab's display; the per-render innerHTML belongs to the child below. -->
+    <div id="pane-decisoes-lista"></div>
+  </div>
+</main>
+
+<!-- Fixed batch-send bar; only visible on the pending decisions tab -->
+<div id="barra-aprovacoes" class="barra-aprovacoes" role="region" aria-label="Send approvals">
+  <span id="barra-aprovacoes-texto" class="barra-aprovacoes-texto" data-i18n="dash.markBeforeSending">Mark items to approve or reject before sending.</span>
+  <button id="btn-enviar-aprovacoes" class="btn" type="button" disabled>Send approvals (0)</button>
+</div>
+
+<footer data-i18n="dash.footer">Internal collaborative review dashboard. Do not share the password outside the team.</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- language -------------------------------------------------------------
+  // Same dictionaries as the review kit, embedded by build-kit.mjs. The OWNER
+  // reads this page, so the default follows the machine: the browser reports the
+  // system language. An explicit choice in the selector wins and is remembered,
+  // because the person who runs the tool should not have to change their OS to
+  // change a dashboard.
+  var I18N = /*__I18N__*/{"en":{}};
+  var LS_IDIOMA = "collab_review_lang";
+  function detectarIdioma(){
+    var salvo = "";
+    try{ salvo = localStorage.getItem(LS_IDIOMA) || ""; }catch(e){}
+    var pedido = String(salvo || navigator.language || "en").toLowerCase().replace(/_/g, "-");
+    var codigos = Object.keys(I18N);
+    var i;
+    for(i=0;i<codigos.length;i++) if(codigos[i].toLowerCase() === pedido) return codigos[i];
+    var raiz = pedido.split("-")[0];
+    for(i=0;i<codigos.length;i++) if(codigos[i].toLowerCase() === raiz) return codigos[i];
+    for(i=0;i<codigos.length;i++) if(codigos[i].toLowerCase().split("-")[0] === raiz) return codigos[i];
+    return "en";
+  }
+  var IDIOMA = detectarIdioma();
+  function T(chave){
+    var dic = I18N[IDIOMA] || {};
+    if(chave in dic) return dic[chave];
+    var base = I18N.en || {};
+    return (chave in base) ? base[chave] : chave;
+  }
+  // Fills every element carrying data-i18n. Runs once at load and again on every
+  // language change, so the static markup and the rendered cards stay in step.
+  // True only when some dictionary actually carries this key. Without it, a
+  // dashboard whose dictionaries were never injected would replace every label
+  // with its own key name - "dash.refresh" on the refresh button. Leaving the
+  // markup untouched instead keeps the English that is already written in it,
+  // so a missed build step degrades to plain English rather than to gibberish.
+  function temTraducao(chave){
+    var dic = I18N[IDIOMA] || {};
+    if(chave in dic) return true;
+    var base = I18N.en || {};
+    return chave in base;
+  }
+  function aplicarTraducoes(raiz){
+    var escopo = raiz || document;
+    var nos = escopo.querySelectorAll("[data-i18n]");
+    for(var i=0;i<nos.length;i++){
+      var chave = nos[i].getAttribute("data-i18n");
+      if(!temTraducao(chave)) continue;
+      var texto = T(chave);
+      // A value carrying markup (the demo banner has a <strong>) goes in as HTML.
+      // These strings come from our own dictionary files, never from a reviewer.
+      if(texto.indexOf("<") !== -1) nos[i].innerHTML = texto; else nos[i].textContent = texto;
+    }
+    var comPlaceholder = escopo.querySelectorAll("[data-i18n-placeholder]");
+    for(var j=0;j<comPlaceholder.length;j++){
+      var chaveP = comPlaceholder[j].getAttribute("data-i18n-placeholder");
+      if(temTraducao(chaveP)) comPlaceholder[j].setAttribute("placeholder", T(chaveP));
+    }
+    try{ document.documentElement.lang = IDIOMA; }catch(e){}
+  }
+
+  // Single source for both server function URLs used here:
+  // ONE placeholder for the read function; the approvals URL is DERIVED from it.
+  // derived from it at runtime: never two loose URLs that could drift apart
+  // and end up pointing at two different backend projects.
+  var FN_LISTAR = "{{EDGE_FN_URL}}";                                   // the read function
+  var FN_APROVACOES = FN_LISTAR.replace("read-feedback", "approvals"); // per-item approval
+  var LS_SENHA = "pa_painel_senha";       // unchanged key, so an existing auto-login keeps working
+  var LEGADO = T("dash.legacy");                // label for legacy rows with no scope
+  var SECAO_CONCLUSAO = "Review conclusion"; // section used by the finish button
+  var MAX_PROPOSTA = 5000;                // character limit for the editable proposal
+  var MODO_DEMO = location.hash.indexOf("fixtures") !== -1; // the quality gate test harness (index.html#fixtures)
+
+  var gate = document.getElementById("gate");
+  var app = document.getElementById("app");
+  var bannerDemo = document.getElementById("banner-demo");
+  var senhaInput = document.getElementById("password");
+  var gateErr = document.getElementById("gate-err");
+  var paneComentarios = document.getElementById("pane-comentarios");
+  var paneDecisoes = document.getElementById("pane-decisoes");
+  var paneDecisoesLista = document.getElementById("pane-decisoes-lista");
+  var barraAprovacoes = document.getElementById("barra-aprovacoes");
+  var btnEnviarAprovacoes = document.getElementById("btn-enviar-aprovacoes");
+  var countEl = document.getElementById("count");
+  var selProjeto = document.getElementById("f-projeto");
+  var selMaterial = document.getElementById("f-material");
+  var tabComentarios = document.getElementById("tab-comentarios");
+  var tabDecisoes = document.getElementById("tab-decisoes");
+  var decisoesN = document.getElementById("decisoes-n");
+  var dadosAtuais = [];     // everything the server returned; filters act only here
+  var senhaAtual = "";      // password held in memory, used to record approvals
+  var decisoesLocais = {};  // id (feedback.id) -> {verdict:'approved'|'rejected'|null, edited_request:string, enviado:bool}
+  // Maps an item id to its real server-side state.
+  // It comes from the approvals function and is the server's TRUTH, surviving a
+  // reload, unlike the local draft above which only lives until the page closes.
+  // Two indexes because a record matches either by decision id OR by gate file
+  // plus item number: an older record may lack the id, so the pair is the fallback.
+  // (empty means sent and awaiting the watcher; filled means already stamped)
+  var serverStates = { porId: {}, porGateItem: {} };
+
+  function fmtData(iso){
+    try{ return new Date(iso).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}) + " (local time)"; }
+    catch(e){ return iso; }
+  }
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+  function tipoDe(f){ return f.type || "comment"; }          // linhas antigas podem vir sem tipo
+  function projetoDe(f){ return f.project || LEGADO; }
+  function materialDe(f){ return f.material || LEGADO; }
+
+  async function carregar(senha){
+    var res = await fetch(FN_LISTAR,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:senha})});
+    if(res.status===401){ throw new Error("password"); }
+    if(!res.ok){ throw new Error("http"); }
+    var body = await res.json();
+    return body.feedbacks || [];
+  }
+
+  // Queries the server for the real state of every decision already recorded.
+  // Without this the dashboard only knew the browser's local memory, and an item
+  // already decided and sent would show its approve and reject buttons again on
+  // a fresh page load.
+  async function carregarAprovacoes(senha){
+    // Requesting non-pending rows too is REQUIRED: without it the backend returns
+    // only pending ones, so already-processed decisions would never come back and
+    // their closed state would be lost, reopening the buttons.
+    var res = await fetch(FN_APROVACOES,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:senha,action:"list",pending_only:false})});
+    if(!res.ok){ throw new Error("http"); }
+    var body = await res.json();
+    return body.approvals || [];
+  }
+
+  function applyServerStates(lista){
+    serverStates = { porId: {}, porGateItem: {} };
+    // the listing returns newest first, so the FIRST one seen per key is the most chave,
+    // the most recent record wins if an item was decided more than once
+
+    (lista || []).forEach(function(r){
+      if(!r){ return; }
+      var rec = { processed_at: (r.processed_at != null ? r.processed_at : null), verdict: r.verdict };
+      if(r.decision_id != null){
+        var k = String(r.decision_id);
+        if(!(k in serverStates.porId)){ serverStates.porId[k] = rec; }
+      }
+      if(r.gate_file != null && r.item_number != null){
+        var g = r.gate_file + "|" + r.item_number;
+        if(!(g in serverStates.porGateItem)){ serverStates.porGateItem[g] = rec; }
+      }
+    });
+  }
+
+  // Matches a decision card against the server record: by decision id first,
+  // falling back to the gate file and item number pair.
+  function estadoServidorDe(f, item){
+    var porId = serverStates.porId[String(f.id)];
+    if(porId){ return porId; }
+    if(item && item.gate_file != null && item.item_number != null){
+      return serverStates.porGateItem[item.gate_file + "|" + item.item_number] || null;
+    }
+    return null;
+  }
+
+  // Marks locally, right after sending, that the decision is on the server
+  // awaiting the watcher. Written to BOTH indexes so either path matches.
+  function markSentOptimistically(registro){
+    var rec = { processed_at: null, verdict: registro.verdict };
+    if(registro.decision_id != null){ serverStates.porId[String(registro.decision_id)] = rec; }
+    if(registro.gate_file != null && registro.item_number != null){
+      serverStates.porGateItem[registro.gate_file + "|" + registro.item_number] = rec;
+    }
+  }
+
+  // ---- filtros (projeto + material) ------------------------------------------
+
+  function opcoesOrdenadas(mapa){
+    // sort alphabetically and push the legacy label to the end
+    var arr = Object.keys(mapa).sort(function(a,b){ return a.localeCompare(b,"pt-BR"); });
+    var i = arr.indexOf(LEGADO);
+    if(i >= 0){ arr.splice(i,1); arr.push(LEGADO); }
+    return arr;
+  }
+
+  function preencherSelect(sel, valores, rotuloTodos){
+    var atual = sel.value;
+    sel.innerHTML = "";
+    var opt0 = document.createElement("option");
+    opt0.value = ""; opt0.textContent = rotuloTodos;
+    sel.appendChild(opt0);
+    valores.forEach(function(v){
+      var o = document.createElement("option");
+      o.value = v; o.textContent = v;
+      sel.appendChild(o);
+    });
+    // keeps the previous selection if it still exists in the new data
+    if(atual && valores.indexOf(atual) >= 0){ sel.value = atual; } else { sel.value = ""; }
+  }
+
+  function popularFiltros(){
+    var projetos = {};
+    dadosAtuais.forEach(function(f){ projetos[projetoDe(f)] = true; });
+    preencherSelect(selProjeto, opcoesOrdenadas(projetos), "All projects");
+    popularMateriais();
+  }
+
+  function popularMateriais(){
+    // materials depend on the chosen project, avoiding empty combinations
+    var p = selProjeto.value;
+    var materiais = {};
+    dadosAtuais.forEach(function(f){
+      if(p && projetoDe(f) !== p){ return; }
+      materiais[materialDe(f)] = true;
+    });
+    preencherSelect(selMaterial, opcoesOrdenadas(materiais), "All materials");
+  }
+
+  function passaFiltro(f){
+    if(selProjeto.value && projetoDe(f) !== selProjeto.value){ return false; }
+    if(selMaterial.value && materialDe(f) !== selMaterial.value){ return false; }
+    return true;
+  }
+
+  selProjeto.addEventListener("change", function(){ popularMateriais(); renderTudo(); });
+  selMaterial.addEventListener("change", renderTudo);
+  document.getElementById("f-limpar").addEventListener("click", function(){
+    selProjeto.value = ""; popularMateriais(); selMaterial.value = ""; renderTudo();
+  });
+
+  // ---- abas -------------------------------------------------------------------
+
+  function ativarAba(qual){
+    var comentarios = (qual === "comentarios");
+    tabComentarios.setAttribute("aria-selected", comentarios ? "true" : "false");
+    tabDecisoes.setAttribute("aria-selected", comentarios ? "false" : "true");
+    paneComentarios.style.display = comentarios ? "block" : "none";
+    paneDecisoes.style.display = comentarios ? "none" : "block";
+    if(barraAprovacoes){ barraAprovacoes.style.display = comentarios ? "none" : "flex"; }
+  }
+  tabComentarios.addEventListener("click", function(){ ativarAba("comentarios"); });
+  tabDecisoes.addEventListener("click", function(){ ativarAba("decisoes"); });
+
+  // ---- render -----------------------------------------------------------------
+
+  function escopoTag(f){
+    // show project and material per row when the filter is on All
+    if(selProjeto.value && selMaterial.value){ return ""; }
+    return '<span class="coment-tag escopo">' + esc(projetoDe(f)) + ' · ' + esc(materialDe(f)) + '</span>';
+  }
+
+  function renderComentarios(feedbacks){
+    countEl.textContent = feedbacks.length + (feedbacks.length===1?" comment":" comments");
+    if(!feedbacks.length){
+      var temDados = dadosAtuais.some(function(f){ return tipoDe(f) !== "decision"; });
+      paneComentarios.innerHTML = '<div class="vazio">' + (temDados
+        ? "No comments match this filter. Adjust the project or material above."
+        : "No comments yet. As soon as a reviewer comments, it shows up here.") + '</div>';
+      return;
+    }
+    // group by section, preserving arrival order (newest first)
+    // groups containing a reviewer conclusion float to the top
+    var grupos = {}; var ordem = [];
+    feedbacks.forEach(function(f){
+      var chave = f.section || "(no section)";
+      if(!grupos[chave]){ grupos[chave]=[]; ordem.push(chave); }
+      grupos[chave].push(f);
+    });
+    ordem.sort(function(a,b){
+      var ca = grupos[a].some(function(f){ return tipoDe(f)==="conclusion"; }) ? 0 : 1;
+      var cb = grupos[b].some(function(f){ return tipoDe(f)==="conclusion"; }) ? 0 : 1;
+      // stable sort: only conclusion groups float up, the rest keeps its order
+    });
+    var html = "";
+    ordem.forEach(function(sec){
+      var arr = grupos[sec];
+      var groupHasConclusion = arr.some(function(f){ return tipoDe(f)==="conclusion"; });
+      html += '<div class="grupo' + (groupHasConclusion ? ' conclusao' : '') + '"><div class="grupo-head"><h3>' + esc(sec) + '</h3><span class="n">' + arr.length + '</span></div>';
+      arr.forEach(function(f){
+        var isConclusion = tipoDe(f)==="conclusion";
+        var corpo = "";
+        if(f.comment){ corpo += '<div class="coment-txt">'+esc(f.comment)+'</div>'; }
+        if(f.audio_url){ corpo += '<div class="coment-audio"><audio controls preload="none" src="'+esc(f.audio_url)+'"></audio><a class="coment-baixar" href="'+esc(f.audio_url)+'">'+esc(T("dash.download"))+'</a></div>'; }
+        if(!f.comment && !f.audio_url){ corpo = '<div class="coment-txt" style="color:var(--cinza-400)">(no content)</div>'; }
+        var tags = "";
+        if(isConclusion){ tags += '<span class="coment-tag ok">' + esc(T("dash.reviewerFinished")) + '</span>'; }
+        if(f.audio_url){ tags += '<span class="coment-tag">' + esc(T("dash.audio")) + '</span>'; }
+        tags += escopoTag(f);
+        html += '<div class="coment' + (isConclusion ? ' conclusao' : '') + '"><div class="coment-top"><span class="coment-nome">'+esc(f.reviewer_name)+'</span><span class="coment-data">'+esc(fmtData(f.created_at))+'</span>'+tags+'</div>'+corpo+'</div>';
+      });
+      html += '</div>';
+    });
+    paneComentarios.innerHTML = html;
+  }
+
+  // ---- pending decisions: per-item approval ----------------------------
+  //
+  // A decision row can arrive in two formats:
+  //  - structured JSON: a card with approve/reject and an editable proposal.
+  //  - legacy plain text: a read-only card, kept for compatibility.
+  //    kept for compatibility; an old row never breaks the dashboard.
+
+  function parseItemV1(f){
+    if(!f || !f.comment) return null;
+    try{
+      var obj = JSON.parse(f.comment);
+      if(obj && obj.formato === "item-v1"){ return obj; }
+    }catch(e){ /* comment is not JSON: fall back to the legacy card */ }
+    return null;
+  }
+
+  function estadoDecisao(id){
+    if(!decisoesLocais[id]){ decisoesLocais[id] = {verdict:null, edited_request:"", enviado:false}; }
+    return decisoesLocais[id];
+  }
+
+  function contarMarcadas(){
+    var n = 0;
+    Object.keys(decisoesLocais).forEach(function(id){
+      var d = decisoesLocais[id];
+      if(d && d.verdict && !d.enviado){ n++; }
+    });
+    return n;
+  }
+
+  function atualizarBarra(){
+    if(!btnEnviarAprovacoes) return;
+    var n = contarMarcadas();
+    btnEnviarAprovacoes.disabled = (n === 0);
+    btnEnviarAprovacoes.textContent = T("dash.sendApprovals") + " (" + n + ")";
+  }
+
+  function renderCardItemV1(f, item){
+    var id = f.id;
+    var est = estadoDecisao(id);
+    // The SERVER state wins.
+    // It falls back to local state only when the server has no record at all for
+    // this item, which keeps a decided-and-sent item from showing its buttons again.
+    // buttons again on a fresh page load.
+    var srv = estadoServidorDe(f, item);
+    var propostaAtual = (est.edited_request && est.edited_request.length) ? est.edited_request : (item.proposal || "");
+    var editado = !!(est.edited_request && est.edited_request.trim() && est.edited_request.trim() !== (item.proposal || "").trim());
+    var classes = "decisao item-v1";
+    var badge = "";
+    var bloqueado = false;
+
+    if(srv && srv.processed_at != null){
+      // Processed means the watcher stamped the gate: decision closed, no going back.
+      bloqueado = true;
+      classes += srv.verdict === "approved" ? " processada processed-approved" : " processada processed-rejected";
+      badge = srv.verdict === "approved"
+        ? '<span class="coment-tag ok">' + T("dash.applied") + '</span>'
+        : '<span class="coment-tag erro">' + T("dash.rejected") + '</span>';
+    } else if(srv){
+      // A server record not yet processed means the owner sent it and the watcher
+      bloqueado = true;
+      classes += srv.verdict === "approved" ? " enviado enviado-aprovado" : " enviado enviado-rejeitado";
+      badge = '<span class="coment-tag pendente">' + T("dash.awaitingWatcher") + ' (' + T(srv.verdict === "approved" ? "dash.approvedVerdict" : "dash.rejectedVerdict") + ')</span>';
+    } else if(est.enviado){
+      // optimistic: just sent in this session, the server has not confirmed yet
+      // (slow network, or demo mode). Same badge as the pending state above.
+      bloqueado = true;
+      classes += est.verdict === "approved" ? " enviado enviado-aprovado" : " enviado enviado-rejeitado";
+      badge = '<span class="coment-tag pendente">' + T("dash.awaitingWatcher") + ' (' + T(est.verdict === "approved" ? "dash.approvedVerdict" : "dash.rejectedVerdict") + ')</span>';
+    } else if(est.verdict === "approved"){
+      classes += " marked-approved";
+      badge = '<span class="coment-tag ok">' + T("dash.markedApprove") + '</span>';
+    } else if(est.verdict === "rejected"){
+      classes += " marked-rejected";
+      badge = '<span class="coment-tag erro">' + T("dash.markedReject") + '</span>';
+    }
+    if(editado){ badge += ' <span class="coment-tag">' + T("dash.proposalEdited") + '</span>'; }
+
+    var restantes = MAX_PROPOSTA - propostaAtual.length;
+    var idAttr = esc(String(id));
+    var numeroItem = esc(String(item.item_number != null ? item.item_number : "?"));
+    var markedApprove = est.verdict === "approved" && !bloqueado;
+    var markedReject = est.verdict === "rejected" && !bloqueado;
+    // A locked item (already decided and sent, pending or processed) NEVER shows
+    // its buttons again. Not disabled: OMITTED. Disabled-but-visible buttons at
+    // half opacity read as "try again", which is exactly wrong here.
+    var acoesHtml = bloqueado ? '' :
+      '<div class="decisao-acoes">' +
+        '<button type="button" class="btn-decision approve' + (markedApprove ? ' active' : '') + '" data-id="' + idAttr + '" data-action="approved">' + esc(T("dash.approve")) + '</button>' +
+        '<button type="button" class="btn-decision reject' + (markedReject ? ' active' : '') + '" data-id="' + idAttr + '" data-action="rejected">' + esc(T("dash.reject")) + '</button>' +
+      '</div>';
+
+    return '<div class="' + classes + '" data-id="' + idAttr + '">' +
+      '<div class="decisao-top">' +
+        '<span class="decisao-titulo">⏳ Item ' + numeroItem + ': ' + esc(item.secao_alvo || f.section || "Pending decision") + '</span>' +
+        '<span class="coment-data">' + esc(fmtData(f.created_at)) + '</span>' +
+        escopoTag(f) + badge +
+      '</div>' +
+      '<div class="decisao-campo"><strong>' + esc(T("dash.reviewerRequest")) + '</strong><div class="decisao-txt">' + esc(item.pedido || "") + '</div></div>' +
+      (item.transcript ? '<div class="decisao-campo"><strong>' + esc(T("dash.transcript")) + '</strong><div class="decisao-txt">' + esc(item.transcript) + '</div></div>' : '') +
+      '<div class="decisao-campo"><strong>' + esc(T("dash.whyStructural")) + '</strong><div class="decisao-txt">' + esc(item.rationale || "") + '</div></div>' +
+      '<label class="decisao-proposta-label" for="proposta-' + idAttr + '">' + esc(T("dash.proposalLabel")) + '</label>' +
+      '<textarea id="proposta-' + idAttr + '" class="decisao-textarea" data-id="' + idAttr + '" maxlength="' + MAX_PROPOSTA + '"' + (bloqueado ? ' readonly' : '') + '>' + esc(propostaAtual) + '</textarea>' +
+      '<div class="decisao-contador" data-contador-de="' + idAttr + '">' + restantes + ' de ' + MAX_PROPOSTA + ' caracteres restantes</div>' +
+      acoesHtml +
+      '<div class="decisao-hint">' + esc(T("dash.gateLabel")) + ': ' + esc(item.gate_file || "?") + ' · ' + esc(T("dash.itemLabel")) + ' ' + numeroItem + '</div>' +
+    '</div>';
+  }
+
+  function renderCardLegado(f){
+    // A decision predating the structured format: read-only for compatibility,
+    // and it never breaks the dashboard.
+    return '<div class="decision">' +
+      '<div class="decisao-top">' +
+        '<span class="decisao-titulo">⏳ ' + esc(f.section || "Pending decision") + '</span>' +
+        '<span class="coment-data">' + esc(fmtData(f.created_at)) + '</span>' +
+        escopoTag(f) +
+      '</div>' +
+      '<div class="decisao-txt">' + esc(f.comment || "(no details; see the gate file under docs/orchestration/structural-gate/)") + '</div>' +
+      '<div class="decisao-hint">' + esc(T("dash.fromLabel")) + ': ' + esc(f.reviewer_name || T("dash.correctionEngine")) + ' · ' + esc(T("dash.legacyNote")) + '</div>' +
+    '</div>';
+  }
+
+  function renderDecisoes(decisoes){
+    decisoesN.textContent = decisoes.length;
+    decisoesN.className = "tab-n" + (decisoes.length ? "" : " zero");
+    if(!decisoes.length){
+      paneDecisoesLista.innerHTML = '<div class="vazio">' + esc(T("dash.noPendingYet")) + '</div>';
+      atualizarBarra();
+      return;
+    }
+    // One card per item, GROUPED by gate file. Arrival order is preserved and each
+    // group gets a heading. Legacy cards have no gate, so they go in their own group
+    // at the end.
+    var ordemGates = [];
+    var grupos = {};
+    var LEGADO_KEY = "__legado__";
+    decisoes.forEach(function(f){
+      var item = parseItemV1(f);
+      var chave = item ? (item.gate_file || "(sem gate)") : LEGADO_KEY;
+      if(!(chave in grupos)){ grupos[chave] = []; ordemGates.push(chave); }
+      grupos[chave].push(item ? renderCardItemV1(f, item) : renderCardLegado(f));
+    });
+    var html = "";
+    ordemGates.forEach(function(chave){
+      var cartoes = grupos[chave];
+      if(chave === LEGADO_KEY){
+        html += '<div class="gate-grupo-titulo gate-grupo-legado">' + esc(T("dash.earlierDecisions")) + ' &middot; ' + cartoes.length + '</div>';
+      } else {
+        html += '<div class="gate-grupo-titulo">📄 Gate: ' + esc(chave) + ' · ' + cartoes.length + ' ' + (cartoes.length === 1 ? "item" : "itens") + '</div>';
+      }
+      html += cartoes.join("");
+    });
+    paneDecisoesLista.innerHTML = html;
+    atualizarBarra();
+  }
+
+  // clicking approve or reject marks locally (clicking the same button again clears it)
+  paneDecisoesLista.addEventListener("click", function(e){
+    var btn = e.target.closest ? e.target.closest(".btn-decision") : null;
+    if(!btn || btn.disabled) return;
+    var id = btn.getAttribute("data-id");
+    var acao = btn.getAttribute("data-action");
+    var est = estadoDecisao(id);
+    est.verdict = (est.verdict === acao) ? null : acao;
+    renderTudo();
+  });
+
+  // typing in the proposal only updates the counter: re-rendering on every keystroke
+  // would lose the cursor position. The rest of the card updates on blur.
+  paneDecisoesLista.addEventListener("input", function(e){
+    var ta = e.target;
+    if(!ta.classList || !ta.classList.contains("decisao-textarea")) return;
+    var id = ta.getAttribute("data-id");
+    var est = estadoDecisao(id);
+    est.edited_request = ta.value;
+    var restantes = MAX_PROPOSTA - ta.value.length;
+    var contador = paneDecisoesLista.querySelector('[data-contador-de="' + id + '"]');
+    if(contador){ contador.textContent = restantes + " de " + MAX_PROPOSTA + " caracteres restantes"; }
+  });
+  paneDecisoesLista.addEventListener("focusout", function(e){
+    var ta = e.target;
+    if(!ta.classList || !ta.classList.contains("decisao-textarea")) return;
+    renderTudo();
+  });
+
+  function mostrarToast(msg){
+    var t = document.getElementById("toast");
+    if(!t){ t = document.createElement("div"); t.id = "toast"; t.className = "toast"; document.body.appendChild(t); }
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(mostrarToast._h);
+    mostrarToast._h = setTimeout(function(){ t.classList.remove("show"); }, 3500);
+  }
+
+  async function enviarAprovacoes(){
+    var itens = [];
+    Object.keys(decisoesLocais).forEach(function(id){
+      var d = decisoesLocais[id];
+      if(!d || !d.verdict || d.enviado){ return; }
+      var f = dadosAtuais.filter(function(x){ return String(x.id) === String(id); })[0];
+      var item = f ? parseItemV1(f) : null;
+      // a legacy card has no gate reference, so it cannot be approved
+      var registro = {
+        project: projetoDe(f), material: materialDe(f),
+        gate_file: item.gate_file, item_number: item.item_number,
+        verdict: d.verdict, decision_id: (typeof f.id === "number" ? f.id : parseInt(f.id, 10))
+      };
+      var editado = d.edited_request && d.edited_request.trim() && d.edited_request.trim() !== (item.proposal || "").trim();
+      if(editado){ registro.edited_request = d.edited_request.trim().slice(0, MAX_PROPOSTA); }
+      itens.push({id: id, registro: registro});
+    });
+    if(!itens.length) return;
+
+    var textoOriginal = btnEnviarAprovacoes.textContent;
+    btnEnviarAprovacoes.disabled = true;
+    btnEnviarAprovacoes.textContent = T("dash.sending");
+
+    if(MODO_DEMO){
+      // demo mode: no real network calls
+      itens.forEach(function(it){
+        decisoesLocais[it.id].enviado = true;
+        markSentOptimistically(it.registro); // optimistic: not processed yet means it is awaiting the watcher
+      });
+      renderTudo();
+      mostrarToast("Demo mode: nothing was actually sent.");
+      return;
+    }
+
+    try{
+      // a Edge Function approvals aceita de 1 a 50 itens por chamada: lotes de 50
+      for(var i = 0; i < itens.length; i += 50){
+        var lote = itens.slice(i, i + 50);
+        var resp = await fetch(FN_APROVACOES, {
+          method: "POST", headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ password: senhaAtual, action: "record", approvals: lote.map(function(it){ return it.registro; }) })
+        });
+        if(!resp.ok){ throw new Error("http"); }
+        var corpo = await resp.json();
+        if(!corpo.ok){ throw new Error(corpo.error_message || "failed"); }
+        lote.forEach(function(it){
+          decisoesLocais[it.id].enviado = true;
+          // optimistic: mark as sent immediately rather than waiting for the next refresh
+          // to hide the buttons; the next refresh or reload confirms it.
+          markSentOptimistically(it.registro);
+        });
+      }
+      renderTudo();
+      mostrarToast(T("dash.sent"));
+    }catch(e){
+      mostrarToast(T("dash.sendFailed"));
+      btnEnviarAprovacoes.disabled = false;
+      btnEnviarAprovacoes.textContent = textoOriginal;
+    }
+  }
+  btnEnviarAprovacoes.addEventListener("click", enviarAprovacoes);
+
+  // ---- language selector ----------------------------------------------------
+  // Populated from whatever dictionaries were embedded, so adding a language is
+  // still just adding a file: nothing here names them one by one.
+  (function montarSeletorIdioma(){
+    var sel = document.getElementById("f-idioma");
+    if(!sel) return;
+    // One language is not a choice. Hiding the selector keeps a dashboard whose
+    // dictionaries were never injected from showing an empty dropdown.
+    if(Object.keys(I18N).length < 2){
+      var rotulo = sel.closest ? sel.closest(".idioma-label") : null;
+      if(rotulo) rotulo.style.display = "none";
+      return;
+    }
+    // Each language names ITSELF, the way its own speakers write it: someone
+      // looking for their language scans for the word they know, not for an
+      // English label they may not read. The name travels inside the dictionary
+      // (_name), so adding a language means adding a file and nothing else.
+    var codigos = Object.keys(I18N).sort();
+    for(var i=0;i<codigos.length;i++){
+      var op = document.createElement("option");
+      op.value = codigos[i];
+      op.textContent = (I18N[codigos[i]] && I18N[codigos[i]]._name) || codigos[i];
+      if(codigos[i] === IDIOMA) op.selected = true;
+      sel.appendChild(op);
+    }
+    sel.addEventListener("change", function(){
+      IDIOMA = sel.value;
+      try{ localStorage.setItem(LS_IDIOMA, IDIOMA); }catch(e){}
+      aplicarTraducoes();
+      // The cards are built as strings, so they carry the old language until the
+      // next render. Re-rendering is what actually changes them on screen.
+      try{ renderTudo(); }catch(e){}
+    });
+  })();
+
+  aplicarTraducoes();
+
+
+  function renderTudo(){
+    var filtrados = dadosAtuais.filter(passaFiltro);
+    var comentarios = filtrados.filter(function(f){ return tipoDe(f) !== "decision"; });
+    var decisoes = filtrados.filter(function(f){ return tipoDe(f) === "decision"; });
+    renderComentarios(comentarios);
+    renderDecisoes(decisoes);
+  }
+
+  function receber(feedbacks){
+    dadosAtuais = feedbacks;
+    popularFiltros();
+    renderTudo();
+  }
+
+  // ---- sign in / refresh / copy ------------------------------------------------
+
+  async function entrar(senha){
+    gateErr.textContent = "";
+    try{
+      var fb = await carregar(senha);
+      senhaAtual = senha;
+      localStorage.setItem(LS_SENHA, senha);
+      gate.style.display = "none";
+      app.style.display = "block";
+      receber(fb);
+    }catch(e){
+      if(e.message==="password"){ gateErr.textContent = T("dash.wrongPassword"); }
+      else{ gateErr.textContent = T("dash.loadFailed"); }
+      return;
+    }
+    // Fetches the real state of already-recorded decisions in parallel. A failure
+    // here does not block login (the dashboard is already open with the comments);
+    // it only leaves the pending/processed state unconfirmed until the next refresh.
+    try{ applyServerStates(await carregarAprovacoes(senha)); renderTudo(); }catch(e){}
+  }
+
+  document.getElementById("entrar").addEventListener("click", function(){ entrar(senhaInput.value.trim()); });
+  senhaInput.addEventListener("keydown", function(e){ if(e.key==="Enter"){ entrar(senhaInput.value.trim()); } });
+
+  document.getElementById("atualizar").addEventListener("click", async function(){
+    var s = localStorage.getItem(LS_SENHA); if(!s) return;
+    var btn = this; btn.disabled = true; btn.textContent = T("dash.refreshing");
+    try{ receber(await carregar(s)); }catch(e){}
+    try{ applyServerStates(await carregarAprovacoes(s)); renderTudo(); }catch(e){}
+    btn.disabled = false; btn.textContent = T("dash.refresh");
+  });
+
+  // Copy all: copies what is visible on the comments tab under the current filter
+  // (conclusions are marked; pending decisions are excluded, they belong to the engine)
+  document.getElementById("copy-all").addEventListener("click", function(){
+    var filtrados = dadosAtuais.filter(passaFiltro).filter(function(f){ return tipoDe(f) !== "decision"; });
+    if(!filtrados.length) return;
+    var txt = filtrados.map(function(f){
+      var corpo = f.comment ? f.comment : (f.audio_url ? "[audio: "+f.audio_url+"]" : "(no content)");
+      var marca = tipoDe(f)==="conclusion" ? "[CONCLUSION] " : "";
+      return "[" + projetoDe(f) + " · " + materialDe(f) + "] [" + (f.section||"") + "]\n" + marca + f.reviewer_name + " — " + fmtData(f.created_at) + "\n" + corpo + "\n";
+    }).join("\n");
+    navigator.clipboard.writeText(txt).then(function(){ var b=document.getElementById("copy-all"); b.textContent=T("dash.copied"); setTimeout(function(){b.textContent=T("dash.copyAll");},1500); });
+  });
+
+  // ---- demo mode fixtures ------------------------------------------------
+  //
+  // The same shape the read-feedback function returns, plus a stand-in for
+  // the approvals listing (fixtures just below), so every state can be seen
+  // They cover every state of the flow in a single load, with no network calls.
+
+  // (all of them visible at once, without clicking anything):
+  //   no server record: purely pending, buttons shown
+  //   marked locally to approve, not sent
+  //   marked locally to reject, not sent
+  //   proposal edited locally, not sent
+  //   9005 server: processed, approved (shows as Applied)
+  //   9006 server: processed, rejected (shows as Rejected)
+  //   legacy format: read-only card
+  //   9008 server: pending, approved (shows as awaiting the watcher)
+  //   9009 server: pending, rejected (shows as awaiting the watcher)
+
+  var FIXTURES = [
+    {id: 9101, reviewer_name: "Sam Rivera", section: "Step 3: Create your account", comment: "Replace 'sign-up code' with 'unique code' here.", created_at: "2026-07-10T13:05:00-03:00", type: "comment", project: "demo-project", material: "Onboarding Guide"},
+    {id: 9102, reviewer_name: "Sam Rivera", section: "Step 5: Sign the form", comment: "This one reads fine, no change needed.", created_at: "2026-07-10T13:07:00-03:00", type: "comment", project: "demo-project", material: "Onboarding Guide"},
+    {id: 9103, reviewer_name: "Sam Rivera", section: SECAO_CONCLUSAO, comment: "Review done, just the two points above.", created_at: "2026-07-10T13:10:00-03:00", type: "conclusion", project: "demo-project", material: "Onboarding Guide"},
+
+    {id: 9001, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T14:00:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
+      comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-140000.md", item_number:1,
+        secao_alvo:"Step 4: Product photos", pedido:"A step is missing between 4 and 5 explaining what to do if a photo fails to upload.",
+        transcript:null, rationale:"Creates a new step, which renumbers the whole section (structural).",
+        proposal:"Insert step 4.1, 'If the photo does not upload', with three quick tips, before the current step 5."})},
+    {id: 9002, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T14:02:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
+      comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-140000.md", item_number:2,
+        secao_alvo:"Signature and photos", pedido:"Swap the order: signature before the photos.",
+        transcript:"I would rather sign before taking the photos, it feels more natural for the customer.", rationale:"Reorders two sections, changing the navigation (structural).",
+        proposal:"Move the 'Signature' block before the 'Photos' block, adjusting the numbering."})},
+    {id: 9003, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T14:04:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
+      comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-140000.md", item_number:3,
+        secao_alvo:"Page hero", pedido:"Replace the top video with a photo carousel.",
+        transcript:null, rationale:"Touches the design system and the hero: outside the pointwise scope.",
+        proposal:"Replace the video component with a carousel of four photos at the same height."})},
+    {id: 9004, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T14:06:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
+      comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-140000.md", item_number:4,
+        secao_alvo:"Introduction", pedido:"Explain more clearly why sign-up is required before the inspection.",
+        transcript:null, rationale:"Contradicts the project's recorded wording decision, so a human should confirm.",
+        proposal:"Add one short paragraph at the start explaining the reason, citing the deadline."})},
+    {id: 9005, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T13:40:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
+      comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-134000.md", item_number:1,
+        secao_alvo:"Footer", pedido:"Add the support phone number to the footer.",
+        transcript:null, rationale:"Navigation and footer are structural elements of the material.",
+        proposal:"Add '+1 555 000 0000' to the footer, next to the contact email."})},
+    {id: 9006, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T13:42:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
+      comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-134000.md", item_number:2,
+        secao_alvo:"Explainer video", pedido:"Swap the video for a shorter one (the current one runs 6 minutes).",
+        transcript:null, rationale:"Replacing the guide's main media is a structural content decision.",
+        proposal:"Replace with the 2-minute short version (already recorded, link pending)."})},
+    {id: 9007, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-08T10:00:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
+      comment: "Older request, not in the structured format: review the wording of step 2 (legacy record)."},
+    {id: 9008, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T14:08:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
+      comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-140800.md", item_number:1,
+        secao_alvo:"Final button", pedido:"Change the button label from 'Send' to 'Complete sign-up'.",
+        transcript:null, rationale:"Primary conversion button: a structural copy change that needs approval.",
+        proposal:"Change the final button label from 'Send' to 'Complete sign-up'."})},
+    {id: 9009, reviewer_name: "ENGINE", section: "Pending decision", created_at: "2026-07-10T14:10:00-03:00", type: "decision", project: "demo-project", material: "Onboarding Guide",
+      comment: JSON.stringify({formato:"item-v1", gate_file:"sam-rivera-20260710-140800.md", item_number:2,
+        secao_alvo:"FAQ section", pedido:"Add a frequently-asked-questions accordion at the end of the page.",
+        transcript:null, rationale:"A new block on the page: structural, outside the original pointwise request.",
+        proposal:"Create a FAQ block with four questions, right before the footer."})}
+  ];
+
+  // Stand-in for the approvals listing, in the SAME shape the real backend returns.
+  // What decides applied versus awaiting is the processed timestamp, not a status
+  // field. There is no status field, and assuming one was a contract that did not
+  // exist. Without a record, "no record" IS the correct state.
+  //   9005 / 9006  processed_at filled -> already applied
+  //   9008 / 9009  processed_at null   -> sent, awaiting the watcher
+  //   9001-9004, 9007  deliberately absent, so the dashboard has to render the
+  //                    no-record case rather than only the two happy ones.
+  var FIXTURES_APROVACOES = [
+    {decision_id: 9005, gate_file: "sam-rivera-20260710-134000.md", item_number: 1, verdict: "approved", processed_at: "2026-07-10T13:50:00-03:00"},
+    {decision_id: 9006, gate_file: "sam-rivera-20260710-134000.md", item_number: 2, verdict: "rejected", processed_at: "2026-07-10T13:50:00-03:00"},
+    {decision_id: 9008, gate_file: "sam-rivera-20260710-140800.md", item_number: 1, verdict: "approved", processed_at: null},
+    {decision_id: 9009, gate_file: "sam-rivera-20260710-140800.md", item_number: 2, verdict: "rejected", processed_at: null}
+  ];
+
+  function semearEstadosDemo(){
+    // pre-marks only the LOCAL states (marked or edited, not yet on the server);
+    // the pending and processed states come from the fixtures instead
+    // applyServerStates(), chamada em iniciarModoDemo() (9001 e 9007 ficam limpos
+    // on purpose: "no record, buttons shown" is a state worth exercising too
+    decisoesLocais[9002] = {verdict:"approved", edited_request:"", enviado:false};
+    decisoesLocais[9003] = {verdict:"rejected", edited_request:"", enviado:false};
+    decisoesLocais[9004] = {verdict:null, edited_request:"Add one short paragraph at the start explaining the reason.", enviado:false};
+  }
+
+  // ---- bootstrap: normal login, or demo mode ---------------------------
+
+  function iniciarModoDemo(){
+    if(bannerDemo){ bannerDemo.style.display = "block"; }
+    gate.style.display = "none";
+    app.style.display = "block";
+    semearEstadosDemo();
+    applyServerStates(FIXTURES_APROVACOES);
+    receber(FIXTURES);
+    ativarAba("decisoes"); // this mode exists to exercise the approval flow
+  }
+
+  if(MODO_DEMO){
+    iniciarModoDemo();
+  } else {
+    // auto sign-in if a password is already stored
+    var saved = localStorage.getItem(LS_SENHA);
+    if(saved){ entrar(saved); }
+  }
+})();
+</script>
+</body>
+</html>

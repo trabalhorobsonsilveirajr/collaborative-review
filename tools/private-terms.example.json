@@ -1,0 +1,17 @@
+{
+  "_comment": "Copy this to .private-terms.json in the repository root and edit it. That file is git-ignored on purpose: a list of things that must not be published is itself a list of private things.",
+  "_why_every_language": "List a term in EVERY language it could appear in. A translation pass once renamed a client material from Portuguese to English mid-cleanup, and the scanner looking for the Portuguese name waved the English one straight through.",
+  "terms": [
+    { "term": "Acme Corporation", "why": "employer name" },
+    { "term": "Acme", "why": "employer short name" },
+    { "term": "Jane Doe", "why": "a real person who never agreed to be in a public repo" },
+    { "term": "internal-project-name", "why": "private project" },
+    { "term": "Client Handbook", "why": "private client material (English name)" },
+    { "term": "Manual do Cliente", "why": "the same material, original language" },
+    {
+      "term": "your-github-handle",
+      "why": "account handle outside this repository's own URLs",
+      "allow": "github\.com/your-github-handle/your-repo|users\.noreply\.github\.com"
+    }
+  ]
+}

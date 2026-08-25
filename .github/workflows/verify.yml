@@ -1,0 +1,78 @@
+name: verify
+
+# Runs every check this project has, on every push and every pull request.
+#
+# WHY THIS FILE MATTERS MORE THAN IT LOOKS. This repository has good verifiers
+# and they were useless for a while, because running them depended on somebody
+# remembering to. Three times in one day a claim of "verified" turned out to be
+# false, each time because a check that existed had not been run. A verifier
+# nobody runs is a verifier that does not exist.
+#
+# So the rule here: every check runs, every time, and a failure blocks the pull
+# request. No check is optional and none is allowed to warn-and-continue — a
+# check whose failure costs nothing gets ignored within a week.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The leak scanner reads git history, not just the working tree, so a
+          # shallow clone would let it report clean about commits it never saw.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Everything parses
+        run: node tools/check-artifacts.mjs .
+
+      - name: The quality gate refuses what it must
+        run: node skills/collaborative-review/scripts/gate.mjs selftest
+
+      - name: The section manifest holds
+        run: node skills/collaborative-review/scripts/section-manifest.mjs selftest
+
+      - name: Language files agree with themselves
+        run: node skills/collaborative-review/scripts/i18n.mjs selftest
+
+      - name: Templates and dictionaries agree
+        run: node tools/check-i18n.mjs .
+
+      - name: The language picker works on a really injected page
+        run: node tools/prove-language-picker.mjs .
+
+      - name: Placeholders are consistent
+        run: node skills/collaborative-review/scripts/check-placeholders.mjs
+
+      - name: Documentation and code agree
+        run: node tools/check-contracts.mjs .
+
+      - name: The pieces agree on the wire format
+        run: node tools/check-wire-format.mjs .
+
+      # Runs without a private-term list, so only the credential patterns are
+      # active here. That is the point: this job proves no CREDENTIAL reaches the
+      # repository. Names are the maintainer's list and stay on their machine.
+      - name: No credentials in the tree or in history
+        run: node tools/check-no-leaks.mjs .
+
+      - name: The sync module holds (45 adversarial cases)
+        shell: pwsh
+        run: ./skills/collaborative-review/scripts/sync-approvals.test.ps1
+
+      # The gate is the security-relevant piece, so its tests have to be able to
+      # fail. This undoes each guard in a copy and requires the suite to go red.
+      # A suite that stays green with a guard removed was never guarding it.
+      - name: The gate's tests have teeth
+        run: node tools/prove-gate-teeth.mjs .

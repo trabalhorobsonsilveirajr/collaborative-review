@@ -1,0 +1,10 @@
+[
+  {
+    "project": "my-project",
+    "material": "Onboarding Guide",
+    "projectFolder": "<your-project>/<page-folder>",
+    "htmlFile": "index.html",
+    "publishCommand": "vercel deploy --prod --yes",
+    "branch": "master"
+  }
+]
