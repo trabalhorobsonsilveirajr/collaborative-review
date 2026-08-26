@@ -26,4 +26,3 @@ First public release.
 ## 1.0
 
 Internal release: parameterized review kit, scoped backend, automatic correction engine.
-
