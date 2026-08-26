@@ -105,18 +105,30 @@ function hit(text) {
 
 /* ---------------- self-test ---------------- */
 
+/* EVERY fixture below is ASSEMBLED AT RUNTIME rather than written out, and that
+ * is not decoration.
+ *
+ * A test case that spells out a credential pattern IS a credential pattern as
+ * far as any scanner is concerned. Writing them literally trips the commit hook
+ * on the maintainer's machine, and GitHub's push protection refuses the push
+ * outright: this repository was blocked from publishing because its own secret
+ * scanner contained what looked like a live Stripe key. A file whose job is to
+ * keep credentials out of a repository has no business being the one thing that
+ * puts one in.
+ *
+ * The lesson was learned once, for the PEM header, and not generalised. It is
+ * generalised now: no fixture here is a contiguous literal.
+ */
+const prefixo = (...partes) => partes.join("");
+
 function selfTest() {
   const mustCatch = [
-    [("key eyJhbGciOiJIUzI1NiIsInR5"+"cCI6IkpXVCJ9"+".body"), "JWT"],
-    [("token ghp"+"_"+"abcdefghijklmnopqrstuvwxyz01"), "github token"],
-    [("sk"+"-ant-"+"abcdefghijklmnopqrstuvwxyz012345"), "anthropic key"],
-    [("sk"+"_live_"+"abcdefghijklmnopqrstuvwxyz"), "stripe live key"],
-    [("AKIA"+"IOSFODNN7"+"EXAMPLE"), "aws key id"],
-    ["postgres://admin:hunter2@db.example.com/x", "database url with password"],
-    /* Assembled at runtime, not written out. A literal PEM header in a test
-     * case trips every credential hook there is, including the one on the
-     * maintainer's machine, and a test fixture should never look like the
-     * thing it tests for. */
+    ["key " + prefixo("eyJhbGciOiJIUzI1NiIsInR5", "cCI6IkpXVCJ9") + ".body", "JWT"],
+    ["token " + prefixo("ghp", "_", "abcdefghijklmnopqrstuvwxyz01"), "github token"],
+    [prefixo("sk", "-ant-", "abcdefghijklmnopqrstuvwxyz012345"), "anthropic key"],
+    [prefixo("sk", "_live_", "abcdefghijklmnopqrstuvwxyz"), "stripe live key"],
+    [prefixo("AKIA", "IOSFODNN7", "EXAMPLE"), "aws key id"],
+    [prefixo("postgres://", "admin", ":hunter2@db.example.com/x"), "database url with password"],
     [["-----BEGIN", "RSA", "PRIVATE", "KEY-----"].join(" "), "private key header"],
     ["path C:/Users/SomeUser/thing", "local Windows path"],
     ["/home/someuser/projects/x", "local Linux path"],
@@ -136,9 +148,9 @@ function selfTest() {
    * still runs on a machine with no .private-terms.json - a CI runner, or
    * anyone who cloned the repository. */
   const mustCatchThroughMarkup = [
-    [("<b>AKIA</b>"+"IOSFODNN7"+"EXAMPLE"), "aws key split by a bold tag"],
-    [("AKIA"+"IOSFO<span>DNN7"+"EXAMPLE</span>"), "aws key split by a span"],
-    [("<i>sk"+"-ant-</i>"+"abcdefghijklmnopqrstuvwxyz012345"), "anthropic key split by an italic tag"],
+    [prefixo("<b>AKIA</b>", "IOSFODNN7", "EXAMPLE"), "aws key split by a bold tag"],
+    [prefixo("AKIA", "IOSFO<span>DNN7", "EXAMPLE</span>"), "aws key split by a span"],
+    [prefixo("<i>sk", "-ant-</i>", "abcdefghijklmnopqrstuvwxyz012345"), "anthropic key split by an italic tag"],
   ];
   /* Stripping tags must not INVENT a match by gluing unrelated words together.
    * "</td><td>" separates two cells; the text either side is not one string. */
