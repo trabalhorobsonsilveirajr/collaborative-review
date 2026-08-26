@@ -1,5 +1,7 @@
 # collaborative-review
 
+[![verify](https://github.com/trabalhorobsonsilveirajr/collaborative-review/actions/workflows/verify.yml/badge.svg)](https://github.com/trabalhorobsonsilveirajr/collaborative-review/actions/workflows/verify.yml)
+
 **A Claude Code skill that turns any HTML page into a reviewable document, collects
 per-section feedback by text and voice, and then applies the corrections itself, behind
 a quality gate that refuses to promote work it cannot vouch for.**
