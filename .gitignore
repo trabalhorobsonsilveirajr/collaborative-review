@@ -29,8 +29,13 @@ __pycache__/
 # fixtures imitate real client material on purpose. They must never be published.
 .attack-lab/
 
-# Working plan for the V2 rebuild. Internal document: written in Portuguese,
-# names the author and their employer, and records decisions that are ours rather
-# than the project's. It lives here so it stays next to the code between sessions,
-# but it is not part of what gets published.
-docs/PLANO-V2.md
+# The whole docs/ folder is INTERNAL. It holds the working plan, the session
+# diary, the decision log and the pending list: written in Portuguese, naming the
+# author and their employer, recording decisions that are ours rather than the
+# project's. It lives here so it stays next to the code between sessions, but none
+# of it is part of what gets published.
+#
+# Ignoring the folder rather than each file on purpose: listing them one by one
+# means the next internal note someone adds is public by default, which is the
+# wrong direction for a default to fail in.
+docs/
