@@ -16,6 +16,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Lets anyone with write access run the whole battery from the Actions tab
+  # without pushing a commit. Also covers the case where GitHub does not fire
+  # the push trigger for the very first commit on a new repository.
+  workflow_dispatch:
 
 permissions:
   contents: read
