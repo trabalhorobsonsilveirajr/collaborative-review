@@ -1,0 +1,50 @@
+name: Work on a known gap
+description: Pick up one of the things this project is missing, listed in the README.
+labels: ["help wanted"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The README has a table of what this project does not have yet, and
+        [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md#where-help-is-wanted) describes
+        what each one would involve.
+
+        Say here which one you are looking at, so two people do not build the same thing
+        twice. No commitment implied: "thinking about it" is a useful thing to post.
+
+  - type: dropdown
+    id: gap
+    attributes:
+      label: Which one
+      options:
+        - A portable watcher (the unattended loop is Windows-only)
+        - A shorter path to the first comment (setup is six steps)
+        - Making the gate the authority on scope
+        - Accessibility of the review kit
+        - The last Portuguese identifiers
+        - Something else that is missing
+    validations:
+      required: true
+
+  - type: textarea
+    id: approach
+    attributes:
+      label: How you are thinking of doing it
+      description: |
+        Rough is fine. For the larger two, it is worth agreeing on an approach before
+        writing much: the shorter-setup one is a design question before it is a coding
+        one.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ### One thing to know before you start
+
+        A check that has never failed has not been tested. Every verifier in this
+        repository tests itself before it looks at your code, and refuses to run when its
+        own detection is wrong. That is not style: three of them once reported "clean"
+        while the exact defect they were written for sat in the code.
+
+        If you add a verifier, do the same. If you change one, prove it still goes red.

@@ -1,0 +1,54 @@
+name: Something did not work
+description: A step failed, a screen looked wrong, or the instructions did not match what you saw.
+labels: ["needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reports of real use are the most valuable thing this project can receive. It has
+        been used by one person so far, which catches a certain kind of mistake and is
+        blind to another: the confusing parts, the assumptions that only hold on the
+        machine it was built on, and the step where someone gives up.
+
+        Boring reports are welcome. "The wording in step 3 did not match my screen" is a
+        real finding.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, and what you saw instead of what you expected.
+      placeholder: |
+        I ran `npm run demo` and the page opened, but clicking Send did nothing and the
+        terminal showed no error.
+    validations:
+      required: true
+
+  - type: input
+    id: step
+    attributes:
+      label: Where you were
+      description: The step, file, or command. Rough is fine.
+      placeholder: SETUP.md, step 3 (deploy the server functions)
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Any output or error
+      description: Paste it as-is. Remove keys and passwords first.
+      render: shell
+
+  - type: input
+    id: environment
+    attributes:
+      label: Your setup
+      description: Operating system, Node version (`node -v`), and browser if the problem was on a page.
+      placeholder: macOS 15, Node 22.11, Firefox
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I removed any keys, passwords, or URLs that identify my project.
+          required: true

@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: How it works, and how to contribute
+    url: https://github.com/trabalhorobsonsilveirajr/collaborative-review/blob/main/CONTRIBUTING.md
+    about: Running the checks, adding a language, and what each known gap would involve.
+  - name: Security
+    url: https://github.com/trabalhorobsonsilveirajr/collaborative-review/blob/main/SECURITY.md
+    about: What the password does and does not protect, and how to report a security problem.

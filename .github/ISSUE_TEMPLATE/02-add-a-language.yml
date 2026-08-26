@@ -1,0 +1,46 @@
+name: Add or improve a language
+description: Translate the reviewer and dashboard interface into another language, or fix a translation.
+labels: ["translation", "good first issue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the smallest useful contribution here, and it needs no knowledge of the
+        rest of the code.
+
+        **A partial translation is welcome.** Any key you leave out falls back to English
+        on its own, key by key, so a half-finished file still ships a working interface.
+        There is no need to do all ninety strings before opening a pull request.
+
+        The steps are in [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md#adding-a-language).
+
+  - type: input
+    id: language
+    attributes:
+      label: Which language
+      description: The name and the BCP 47 tag.
+      placeholder: Deutsch (de), or 日本語 (ja)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What this is
+      options:
+        - A new language
+        - A fix to an existing translation
+        - Completing a partial translation
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything worth knowing
+      description: |
+        Things that often matter: a right-to-left script, a word that has no good
+        equivalent, or a string where the English is ambiguous and you had to guess.
+      placeholder: |
+        This language is written right to left, so the layout would need mirroring as
+        well as translating. I can do the text; the CSS side is beyond me.

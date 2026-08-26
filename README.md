@@ -154,6 +154,27 @@ left behind in the HTML.
   password through a server function.
 - Commit secrets. The versioned SQL carries placeholders, never real keys.
 
+## Project status, and what is missing
+
+Working and used daily: the review kit, the dashboard, the quality gate, and the
+unattended correction loop on Windows.
+
+The list below is what this project does NOT have yet, written plainly so nobody has
+to discover it the hard way. Each one is a place where help is welcome, and
+[CONTRIBUTING.md](CONTRIBUTING.md) describes what each would involve.
+
+| Gap | Size | Who it affects |
+|---|---|---|
+| **The unattended loop is Windows-only.** The watcher is a PowerShell script on Task Scheduler. Everything else runs anywhere. | Large | Anyone on macOS or Linux who wants corrections applied automatically. Collecting feedback works fine. |
+| **Setup is six steps.** Backend project, schema, four server functions, storage bucket, dashboard, and optionally the watcher. Thirty to sixty minutes before the first comment arrives. | Large, needs a design decision first | Everyone installing it. `npm run demo` exists because that gap is too wide. |
+| **This has been used by one person.** Every check here is internal. Nobody outside has installed it and told us where it hurts. | Small, and the most valuable | Everyone, indirectly. An issue saying "I got stuck at step 3" is worth more than most patches. |
+| **The agent still computes its own boundary.** The gate verifies afterwards, byte for byte. But the scope is calculated by the same party that has to respect it. | Medium | Nobody today. It is a hardening question, not a bug. |
+| **The review kit has never been tested with a screen reader.** It uses `role="status"` and `aria-live`, which is a start and not a substitute for testing. | Medium | Reviewers who use assistive technology. |
+| **Twenty-six identifiers are still in Portuguese.** `node tools/check-artifacts.mjs . --advisory` lists them. None cross a file boundary. | Small, mechanical | Anyone reading the source. Good first change. |
+
+If one of these is in your way, say so in an issue. Knowing which gap actually blocks
+real people is more useful than any estimate written here.
+
 ## Repository layout
 
 ```
